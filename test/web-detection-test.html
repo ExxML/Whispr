@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Focus & Visibility Test</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 100px;
+      background: #111;
+      color: #eee;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <h1>Focus & Visibility Test</h1>
+  <p id="status">🟢 Window and tab are active</p>
+
+  <div style="margin: 20px 0;">
+    <h2>Input Events Log</h2>
+    <div id="events" style="background: #222; padding: 10px; text-align: left; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px;"></div>
+  </div>
+
+  <script>
+    const status = document.getElementById('status');
+
+    function updateStatus(source) {
+      let message;
+      let color;
+
+      if (document.hidden) {
+        message = `🔴 Tab is hidden (${source})`;
+        color = '#600';
+      } else if (document.hasFocus()) {
+        message = `🟢 Window and tab are active (${source})`;
+        color = '#111';
+      } else {
+        message = `🟠 Window lost focus (${source})`;
+        color = '#663300';
+      }
+
+      status.textContent = message;
+      document.body.style.background = color;
+    }
+
+    // Detect window-level focus changes
+    window.addEventListener('focus', () => updateStatus('focus event'));
+    window.addEventListener('blur', () => updateStatus('blur event'));
+
+    // Detect tab visibility changes (switching tabs)
+    document.addEventListener('visibilitychange', () => updateStatus('visibilitychange event'));
+
+    // Initialize on load
+    updateStatus('initial load');
+
+    // Input Events Logger
+    const eventsContainer = document.getElementById('events');
+    const maxEvents = 50;
+    const events = [];
+
+    function addEvent(type, event, details = '') {
+      const timestamp = new Date().toLocaleTimeString();
+      const eventData = {
+        timestamp,
+        type,
+        details: details || `${event.type}${event.key ? ` (${event.key})` : ''}${event.button !== undefined ? ` (button ${event.button})` : ''}${event.ctrlKey || event.altKey || event.shiftKey || event.metaKey ? ` [${event.ctrlKey ? 'Ctrl ' : ''}${event.altKey ? 'Alt ' : ''}${event.shiftKey ? 'Shift ' : ''}${event.metaKey ? 'Meta' : ''}]` : ''}`
+      };
+
+      events.unshift(eventData);
+
+      if (events.length > maxEvents) {
+        events.pop();
+      }
+
+      updateEventsDisplay();
+    }
+
+    function updateEventsDisplay() {
+      eventsContainer.innerHTML = events.map(event =>
+        `<div style="margin: 2px 0; padding: 2px;">[${event.timestamp}] <strong>${event.type}</strong>: ${event.details}</div>`
+      ).join('');
+    }
+
+    // Keyboard Events
+    document.addEventListener('keydown', (e) => addEvent('KEYBOARD', e));
+    document.addEventListener('keyup', (e) => addEvent('KEYBOARD', e));
+    document.addEventListener('keypress', (e) => addEvent('KEYBOARD', e));
+
+    // Mouse Events (excluding movement events)
+    document.addEventListener('click', (e) => addEvent('MOUSE', e));
+    document.addEventListener('mousedown', (e) => addEvent('MOUSE', e));
+    document.addEventListener('mouseup', (e) => addEvent('MOUSE', e));
+    document.addEventListener('dblclick', (e) => addEvent('MOUSE', e));
+    document.addEventListener('contextmenu', (e) => addEvent('MOUSE', e));
+    document.addEventListener('wheel', (e) => addEvent('MOUSE', e));
+
+    // Touch Events (for mobile/touch devices)
+    document.addEventListener('touchstart', (e) => addEvent('TOUCH', e));
+    document.addEventListener('touchend', (e) => addEvent('TOUCH', e));
+    document.addEventListener('touchmove', (e) => addEvent('TOUCH', e));
+    document.addEventListener('touchcancel', (e) => addEvent('TOUCH', e));
+  </script>
+</body>
+</html>
