@@ -4,7 +4,6 @@ from ui.overlay_window import Overlay
 import sys
 import signal
 
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     overlay = Overlay()

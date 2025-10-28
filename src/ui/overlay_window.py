@@ -1,7 +1,9 @@
 import ctypes
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter, QColor
-from PyQt6.QtWidgets import QApplication, QWidget
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout
+from .chat_area import ChatArea
+from .input_bar import InputBar
 
 class Overlay(QWidget):
     def __init__(self):
@@ -12,7 +14,7 @@ class Overlay(QWidget):
         # Config variables
         self.overlay_window_colour = "1E1E1E" # in hex
         self.window_width = 600
-        self.window_height = 400
+        self.window_height = 600
 
         # Set window flags for overlay behavior
         self.setWindowFlags(
@@ -29,7 +31,21 @@ class Overlay(QWidget):
         screen_width = screen_rect.width()
         self.setGeometry((screen_width - self.window_width) // 2, 10, self.window_width, self.window_height)
         self.setWindowOpacity(0.8)
-        self.setStyleSheet(f"background-color: #{self.overlay_window_colour};")
+        
+        # Create main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+        
+        # Create and add chat area
+        self.chat_area = ChatArea(self)
+        main_layout.addWidget(self.chat_area, stretch=1)
+        
+        # Create and add input bar
+        self.input_bar = InputBar(self)
+        self.input_bar.message_sent.connect(self.handle_message)
+        main_layout.addWidget(self.input_bar)
+        
         self.show()
         
         # Set display affinity to exclude overlay from screen capture (Windows 10+)
@@ -38,6 +54,16 @@ class Overlay(QWidget):
         result = ctypes.windll.user32.SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)
         if result == 0:
             print("Warning: SetWindowDisplayAffinity failed. May appear in screenshots.")
+    
+    def handle_message(self, message):
+        """Handle when a message is sent from the input bar"""
+        # Add user message to chat
+        self.chat_area.add_message(message, is_user=True)
+        
+        # TODO: Add bot response logic here
+        # For now, add a simple echo response
+        bot_response = f"Echo: {message}"
+        self.chat_area.add_message(bot_response, is_user=False)
 
     # Override paintEvent to render rounded corners on app window
     def paintEvent(self, event):
