@@ -1,11 +1,17 @@
 import json
+import os
 from PyQt6.QtWidgets import QPushButton
+from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import QSize
 
 class ClearChat(QPushButton):
     def __init__(self, parent, on_click):
-        super().__init__("🗑️", parent)
-        self.setMinimumHeight(32)
+        super().__init__("", parent)
+        self.setFixedSize(32, 32)
         self.clicked.connect(on_click)
+        assets_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'clear_chat_button.png')
+        self.setIcon(QIcon(assets_path))
+        self.setIconSize(QSize(16, 16))
         self.setStyleSheet(
             """
             QPushButton {
@@ -13,7 +19,6 @@ class ClearChat(QPushButton):
                 color: #FFFFFF;
                 border: 1px solid rgba(255, 255, 255, 0.3);
                 border-radius: 16px;
-                padding: 6px 14px;
             }
             QPushButton:hover {
                 background-color: rgba(255, 255, 255, 0.3);

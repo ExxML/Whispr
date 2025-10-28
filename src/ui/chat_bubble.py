@@ -18,12 +18,13 @@ class ChatBubble(QWidget):
         # Create message label with HTML for better line spacing
         # Replace newlines with <br> and wrap in HTML with line height
         html_message = self.message.replace('\n', '<br>')
-        message_label = QLabel(f'<div style="line-height: 1.25;">{html_message}</div>')
+        message_label = QLabel(f'<div style="line-height: 1.3;">{html_message}</div>')
         message_label.setWordWrap(True)
         message_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         
         # Set font
         font = QFont("Microsoft JhengHei", 10)
+        font.setPointSizeF(10.5)
         message_label.setFont(font)
         
         # Style the bubble based on sender
@@ -37,14 +38,12 @@ class ChatBubble(QWidget):
                     padding: 7px 7px 2px 7px;  /* top, right, bottom, left */
                 }
             """)
-            message_label.setMinimumWidth(min(len(self.message), 450))
             message_label.setMaximumWidth(450)
             layout.addStretch()
             layout.addWidget(message_label)
         else:
             # Bot messages: transparent, aligned left
-            message_label.setMinimumWidth(550)
-            message_label.setMaximumWidth(550)
+            message_label.setFixedWidth(550)
             layout.addWidget(message_label)
             layout.addStretch()
         
