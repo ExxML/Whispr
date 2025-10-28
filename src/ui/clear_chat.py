@@ -7,28 +7,23 @@ from PyQt6.QtCore import QSize
 class ClearChat(QPushButton):
     def __init__(self, parent, on_click):
         super().__init__("", parent)
-        self.setFixedSize(32, 32)
+        self.setFixedSize(36, 32)
         self.clicked.connect(on_click)
-        assets_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'clear_chat_button.png')
-        self.setIcon(QIcon(assets_path))
-        self.setIconSize(QSize(16, 16))
-        self.setStyleSheet(
-            """
+        assets_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets')
+        self.light_icon_path = os.path.join(assets_dir, 'clear_chat_button_light.png')
+        self.dark_icon_path = os.path.join(assets_dir, 'clear_chat_button_dark.png')
+        self.setIcon(QIcon(self.light_icon_path))
+        self.setIconSize(QSize(14, 14))
+        self.setStyleSheet('''
             QPushButton {
-                background-color: rgba(255, 255, 255, 0.1);
-                color: #FFFFFF;
-                border: 1px solid rgba(255, 255, 255, 0.3);
-                border-radius: 16px;
+                border: none;
             }
             QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.3);
-                border: 1px solid rgba(255, 255, 255, 0.5);
+                background-color: rgba(255, 255, 255, 0.5);
+                border-radius: 0px;
+                border-top-left-radius: 8px;
             }
-            QPushButton:pressed {
-                background-color: rgba(255, 255, 255, 0.15);
-            }
-            """
-        )
+        ''')
 
     def save_message(self, chat_history_path, message, is_user):
         """Save a message to chat_history.json"""
@@ -55,3 +50,13 @@ class ClearChat(QPushButton):
         # Clear JSON file
         with open(chat_history_path, 'w') as f:
             json.dump([], f)
+
+    # Override to change icon on hover
+    def enterEvent(self, event):
+        self.setIcon(QIcon(self.dark_icon_path))
+        super().enterEvent(event)
+
+    # Override to change icon when not on hover
+    def leaveEvent(self, event):
+        self.setIcon(QIcon(self.light_icon_path))
+        super().leaveEvent(event)
