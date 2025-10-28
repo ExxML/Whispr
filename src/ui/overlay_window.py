@@ -1,9 +1,11 @@
 import ctypes
+import os
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter, QColor
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout
 from .chat_area import ChatArea
 from .input_bar import InputBar
+from .clear_chat import ClearChat
 
 class Overlay(QWidget):
     def __init__(self):
@@ -15,6 +17,7 @@ class Overlay(QWidget):
         self.overlay_window_colour = "1E1E1E" # in hex
         self.window_width = 600
         self.window_height = 600
+        self.chat_history_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'chat_history.json')
 
         # Set window flags for overlay behavior
         self.setWindowFlags(
@@ -34,8 +37,12 @@ class Overlay(QWidget):
         
         # Create main layout
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
+        main_layout.setContentsMargins(5, 5, 5, 5)
+        main_layout.setSpacing(6)
+        
+        # Create Clear Chat button
+        self.clear_chat_button = ClearChat(self, self.clear_chat)
+        main_layout.addWidget(self.clear_chat_button, alignment=Qt.AlignmentFlag.AlignLeft)
         
         # Create and add chat area
         self.chat_area = ChatArea(self)
@@ -59,11 +66,17 @@ class Overlay(QWidget):
         """Handle when a message is sent from the input bar"""
         # Add user message to chat
         self.chat_area.add_message(message, is_user=True)
+        self.clear_chat_button.save_message(self.chat_history_path, message, is_user=True)
         
         # TODO: Add bot response logic here
         # For now, add a simple echo response
         bot_response = f"Echo: {message}"
         self.chat_area.add_message(bot_response, is_user=False)
+        self.clear_chat_button.save_message(self.chat_history_path, bot_response, is_user=False)
+    
+    def clear_chat(self):
+        """Clear all chat messages from UI and chat_history.json"""
+        self.clear_chat_button.clear_chat(self.chat_history_path, self.chat_area)
 
     # Override paintEvent to render rounded corners on app window
     def paintEvent(self, event):
