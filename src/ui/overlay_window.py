@@ -2,7 +2,7 @@ import ctypes
 import os
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter, QColor
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
 from .chat_area import ChatArea
 from .input_bar import InputBar
 from .clear_chat import ClearChat
@@ -37,12 +37,53 @@ class Overlay(QWidget):
         
         # Create main layout
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(5, 5, 5, 5)
-        main_layout.setSpacing(6)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
         
-        # Create Clear Chat button
         self.clear_chat_button = ClearChat(self, self.clear_chat)
-        main_layout.addWidget(self.clear_chat_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        header_layout = QHBoxLayout()
+        header_layout.addWidget(self.clear_chat_button)
+        header_layout.addStretch(1)
+        self.min_btn = QPushButton('–', self)
+        self.min_btn.setFixedSize(36, 32)
+        self.min_btn.clicked.connect(self.hide)
+        self.min_btn.setStyleSheet('''
+            QPushButton {
+                color: rgba(255, 255, 255, 0.3);
+                border: none;
+                font-size: 24px;
+                font-weight: bold;
+                padding-bottom: 3px;
+                text-align: center;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 0.5);
+                color: rgba(0, 0, 0, 0.6);
+                border-radius: 0px;
+            }
+        ''')
+        self.close_btn = QPushButton('×', self)
+        self.close_btn.setFixedSize(36, 32)
+        self.close_btn.clicked.connect(self.quit_app)
+        self.close_btn.setStyleSheet('''
+            QPushButton {
+                color: rgba(255, 255, 255, 0.3);
+                border: none;
+                font-size: 24px;
+                font-weight: bold;
+                padding-bottom: 3px;
+                text-align: center;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 77, 69, 0.5);
+                color: rgba(0, 0, 0, 0.6);
+                border-radius: 0px;
+                border-top-right-radius: 8px;
+            }
+        ''')
+        header_layout.addWidget(self.min_btn)
+        header_layout.addWidget(self.close_btn)
+        main_layout.addLayout(header_layout)
         
         # Create and add chat area
         self.chat_area = ChatArea(self)
@@ -77,6 +118,11 @@ class Overlay(QWidget):
     def clear_chat(self):
         """Clear all chat messages from UI and chat_history.json"""
         self.clear_chat_button.clear_chat(self.chat_history_path, self.chat_area)
+
+    def quit_app(self):
+        app = QApplication.instance()
+        if app is not None:
+            app.quit()
 
     # Override paintEvent to render rounded corners on app window
     def paintEvent(self, event):

@@ -14,7 +14,7 @@ class InputBar(QWidget):
     
     def initUI(self):
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(7, 6, 7, 5)
+        layout.setContentsMargins(12, 6, 12, 12)
         layout.setSpacing(8)
         
         # Create text input field
