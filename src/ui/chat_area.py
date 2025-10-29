@@ -19,7 +19,7 @@ class ChatArea(QScrollArea):
         self.chat_container = QWidget()
         self.chat_layout = QVBoxLayout(self.chat_container)
         self.chat_layout.setContentsMargins(3, 3, 3, 3)
-        self.chat_layout.setSpacing(10)
+        self.chat_layout.setSpacing(0)
         self.chat_layout.addStretch()
         
         # Set the container as the scroll area's widget

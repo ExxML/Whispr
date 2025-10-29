@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QFontMetrics
 
 class ChatBubble(QWidget):
     """A chat bubble widget for displaying messages"""
@@ -15,17 +15,28 @@ class ChatBubble(QWidget):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(10, 5, 10, 5)
         
-        # Create message label with HTML for better line spacing
-        # Replace newlines with <br> and wrap in HTML with line height
-        html_message = self.message.replace('\n', '<br>')
-        message_label = QLabel(f'<div style="line-height: 1.3;">{html_message}</div>')
-        message_label.setWordWrap(True)
+        # Create message label with HTML formatting for line spacing
+        html_message = f'<div style="line-height: 1.2;">{self.message}</div>'
+        message_label = QLabel(html_message)
+        message_label.setTextFormat(Qt.TextFormat.RichText)
         message_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         
         # Set font
         font = QFont("Microsoft JhengHei", 10)
         font.setPointSizeF(10.5)
         message_label.setFont(font)
+
+        # Calculate text width to determine if wrapping is needed
+        fm = QFontMetrics(font)
+        text_width = fm.horizontalAdvance(self.message) + 8 # additional offset for right spacing
+        max_width = 450
+        padding = 14  # 7px left + 7px right
+        # Only enable word wrap if text exceeds max width
+        if text_width + padding > max_width:
+            message_label.setWordWrap(True)
+            message_label.setFixedWidth(max_width)
+        else:
+            message_label.setFixedWidth(text_width + padding)
         
         # Style the bubble based on sender
         if self.is_user:
@@ -38,7 +49,6 @@ class ChatBubble(QWidget):
                     padding: 7px 7px 2px 7px;  /* top, right, bottom, left */
                 }
             """)
-            message_label.setMaximumWidth(450)
             layout.addStretch()
             layout.addWidget(message_label)
         else:
