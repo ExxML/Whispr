@@ -1,8 +1,8 @@
-import json
-import os
-from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import QSize
+from PyQt6.QtWidgets import QPushButton
+import os
+import json
 
 class ClearChat(QPushButton):
     def __init__(self, parent, on_click):

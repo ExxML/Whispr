@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QFontMetrics
+from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout
 
 class ChatBubble(QWidget):
     """A chat bubble widget for displaying messages"""

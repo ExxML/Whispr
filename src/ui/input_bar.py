@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLineEdit
-from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QFont
+from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLineEdit
 
 class InputBar(QWidget):
     """Input bar with text field and send button"""

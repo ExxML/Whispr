@@ -1,11 +1,11 @@
-import ctypes
-import os
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter, QColor
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
-from .chat_area import ChatArea
 from .input_bar import InputBar
+from .chat_area import ChatArea
 from .clear_chat import ClearChat
+import os
+import ctypes
 
 class Overlay(QWidget):
     def __init__(self):
