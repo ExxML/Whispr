@@ -31,8 +31,7 @@ class Overlay(QWidget):
         
         # Window setup (position overlay at center-top on screen)
         screen_rect = QApplication.primaryScreen().availableGeometry()
-        screen_width = screen_rect.width()
-        self.setGeometry((screen_width - self.window_width) // 2, 10, self.window_width, self.window_height)
+        self.setGeometry((screen_rect.width() - self.window_width) // 2, 2, self.window_width, self.window_height)
         self.setWindowOpacity(0.8)
         
         # Create main layout

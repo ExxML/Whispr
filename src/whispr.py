@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QApplication
 from ui.overlay_window import Overlay
-from core.shortcuts import ShortcutManager
+from core.shortcut_manager import ShortcutManager
 import os
 import sys
 import json
