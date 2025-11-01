@@ -43,16 +43,23 @@ class ChatBubble(QWidget):
             # User messages: light gray, aligned right
             message_label.setStyleSheet("""
                 QLabel {
-                    color: #ffffff;
-                    border: 1px solid rgba(255, 255, 255, 0.7);
+                    color: rgba(255, 255, 255, 1.0);
+                    background-color: transparent;
+                    border: 1px solid rgba(255, 255, 255, 1.0);
                     border-radius: 10px;
-                    padding: 7px 7px 2px 7px;  /* top, right, bottom, left */
+                    padding: 5px 7px 2px 7px;  /* top, right, bottom, left */
                 }
             """)
             layout.addStretch()
             layout.addWidget(message_label)
         else:
             # Bot messages: transparent, aligned left
+            message_label.setStyleSheet("""
+                QLabel {
+                    color: rgba(255, 255, 255, 1.0);
+                    background-color: transparent;
+                }
+            """)
             message_label.setFixedWidth(550)
             layout.addWidget(message_label)
             layout.addStretch()

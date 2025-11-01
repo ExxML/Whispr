@@ -30,18 +30,14 @@ class InputBar(QWidget):
         # Style the input field
         self.input_field.setStyleSheet("""
             QLineEdit {
-                background-color: rgba(255, 255, 255, 0.15);
-                color: #FFFFFF;
-                border: 1px solid rgba(255, 255, 255, 0.15);
+                background-color: rgba(255, 255, 255, 0.2);
+                color: rgba(255, 255, 255, 1.0);
+                border: 1px solid rgba(255, 255, 255, 0.2);
                 border-radius: 16px;
                 padding: 6px 10px;
             }
             QLineEdit:focus {
-                border: 1px solid rgba(255, 255, 255, 0.5);
-                background-color: rgba(255, 255, 255, 0.2);
-            }
-            QLineEdit::placeholder {
-                color: rgba(255, 255, 255, 0.5);
+                border: 1px solid rgba(255, 255, 255, 0.8);
             }
         """)
         
