@@ -34,8 +34,13 @@ class ShortcutManager(QObject):
         # - Ctrl + E to show/hide overlay
         # - Ctrl + D to generate AI output
         # - Ctrl + Alt + <ArrowKeys> to move overlay window
-        # - Ctrl + Shift + <UpArrow/DownArrow> to scroll up/down in the overlay window
-        keyboard.add_hotkey('Ctrl + E', self.toggle_overlay, suppress = True)
+        # - Ctrl + Shift + <Up/Down> to scroll up/down in the overlay window
+        # - Ctrl + Shift + Q to quit the application
+        keyboard.add_hotkey('Ctrl + E', self.toggle_overlay, suppress = True) # Toggle visibility is always active
+        self.register_hotkeys()
+    
+    def register_hotkeys(self):
+        """Register hotkeys that are only active when overlay is visible"""
         keyboard.add_hotkey('Ctrl + Alt + Left', self.move_window_left, suppress = True)
         keyboard.add_hotkey('Ctrl + Alt + Right', self.move_window_right, suppress = True)
         keyboard.add_hotkey('Ctrl + Alt + Up', self.move_window_up, suppress = True)
@@ -44,15 +49,26 @@ class ShortcutManager(QObject):
         keyboard.add_hotkey('Ctrl + Shift + Down', self.scroll_down, suppress = True)
         keyboard.add_hotkey('Ctrl + Shift + Q', self.close_app, suppress = True)
     
+    def unregister_hotkeys(self):
+        """Unregister hotkeys that should only work when overlay is visible"""
+        keyboard.remove_hotkey('Ctrl + Alt + Left')
+        keyboard.remove_hotkey('Ctrl + Alt + Right')
+        keyboard.remove_hotkey('Ctrl + Alt + Up')
+        keyboard.remove_hotkey('Ctrl + Alt + Down')
+        keyboard.remove_hotkey('Ctrl + Shift + Up')
+        keyboard.remove_hotkey('Ctrl + Shift + Down')
+        keyboard.remove_hotkey('Ctrl + Shift + Q')
+    
     def toggle_overlay(self):
         """Toggle overlay visibility"""
         if self.is_visible:
             self.overlay.hide()
-            self.is_visible = False
+            self.unregister_hotkeys()
         else:
             self.overlay.show()
             self.overlay.raise_() # Bring to front
-            self.is_visible = True
+            self.register_hotkeys()
+        self.is_visible = not self.is_visible
     
     def setup_movement_distances(self):
         """Determine screen geometry and movement distances"""
