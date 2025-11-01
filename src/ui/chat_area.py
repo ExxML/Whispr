@@ -79,3 +79,8 @@ class ChatArea(QScrollArea):
             item = self.chat_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+    
+    def shortcut_scroll(self, amount):
+        """Scroll the chat area by a specified amount"""
+        scrollbar = self.verticalScrollBar()
+        scrollbar.setValue(scrollbar.value() + amount)
