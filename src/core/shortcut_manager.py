@@ -7,6 +7,7 @@ class ShortcutManager(QObject):
     # Signals for safe threading
     move_signal = pyqtSignal(int, int)
     scroll_signal = pyqtSignal(int)
+    quit_signal = pyqtSignal()
     
     def __init__(self, overlay):
         super().__init__()
@@ -18,6 +19,7 @@ class ShortcutManager(QObject):
         # Connect signals
         self.move_signal.connect(self._start_animation)
         self.scroll_signal.connect(self.overlay.chat_area.shortcut_scroll)
+        self.quit_signal.connect(self.overlay.quit_app)
         # Initialize animation
         self.animation_timer = QTimer()
         self.animation_timer.timeout.connect(self._animate_step)
@@ -40,6 +42,7 @@ class ShortcutManager(QObject):
         keyboard.add_hotkey('Ctrl + Alt + Down', self.move_window_down, suppress = True)
         keyboard.add_hotkey('Ctrl + Shift + Up', self.scroll_up, suppress = True)
         keyboard.add_hotkey('Ctrl + Shift + Down', self.scroll_down, suppress = True)
+        keyboard.add_hotkey('Ctrl + Shift + Q', self.close_app, suppress = True)
     
     def toggle_overlay(self):
         """Toggle overlay visibility"""
@@ -123,3 +126,7 @@ class ShortcutManager(QObject):
     def scroll_down(self):
         """Scroll down in the chat area"""
         self.scroll_signal.emit(100)
+
+    def close_app(self):
+        """Close the application"""
+        self.quit_signal.emit() # Must emit signal to run on main thread
