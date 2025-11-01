@@ -119,14 +119,10 @@ class Overlay(QWidget):
         self.clear_chat_button.clear_chat(self.chat_history_path, self.chat_area)
 
     def quit_app(self):
+        self.clear_chat()
         app = QApplication.instance()
         if app is not None:
             app.quit()
-
-    # Override closeEvent to clear chat
-    def closeEvent(self, event):
-        self.clear_chat()
-        super().closeEvent(event)
 
     # Override paintEvent to render rounded corners on app window
     def paintEvent(self, event):
