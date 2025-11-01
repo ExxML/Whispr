@@ -1,5 +1,5 @@
-from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import QScrollArea, QWidget, QVBoxLayout
+from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, QAbstractAnimation
 from .chat_bubble import ChatBubble
 
 class ChatArea(QScrollArea):
@@ -8,6 +8,7 @@ class ChatArea(QScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.initUI()
+        self._init_scroll_animation()
         
     def initUI(self):
         # Configure scroll area
@@ -52,6 +53,11 @@ class ChatArea(QScrollArea):
             }
         """)
     
+    def _init_scroll_animation(self):
+        """Initialize smooth scrolling animation"""
+        self._scroll_anim = QPropertyAnimation(self.verticalScrollBar(), b"value", self)
+        self._scroll_anim.setEasingCurve(QEasingCurve.Type.OutQuad)
+    
     def add_message(self, message, is_user=False):
         """Add a new message to the chat area"""
         # Remove the stretch before adding new message
@@ -70,7 +76,7 @@ class ChatArea(QScrollArea):
     def scroll_to_bottom(self):
         """Smoothly scroll to the bottom of the chat area"""
         scrollbar = self.verticalScrollBar()
-        scrollbar.setValue(scrollbar.maximum())
+        self._animate_to(scrollbar.maximum(), 100)
     
     def clear_messages(self):
         """Clear all messages from the chat area"""
@@ -83,4 +89,19 @@ class ChatArea(QScrollArea):
     def shortcut_scroll(self, amount):
         """Scroll the chat area by a specified amount"""
         scrollbar = self.verticalScrollBar()
-        scrollbar.setValue(scrollbar.value() + amount)
+        target = scrollbar.value() + amount
+        duration = 100
+        self._animate_to(target, duration)
+    
+    def _animate_to(self, target, duration):
+        """Animate scrollbar to target position"""
+        anim = self._scroll_anim
+        if anim.state() == QAbstractAnimation.State.Running:
+            anim.stop()
+        sb = self.verticalScrollBar()
+        target = max(sb.minimum(), min(target, sb.maximum()))
+        anim.setTargetObject(sb)
+        anim.setStartValue(sb.value())
+        anim.setEndValue(target)
+        anim.setDuration(duration)
+        anim.start()
