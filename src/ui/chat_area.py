@@ -5,7 +5,7 @@ from .chat_bubble import ChatBubble
 class ChatArea(QScrollArea):
     """Scrollable chat area for displaying message history"""
     
-    def __init__(self, parent=None):
+    def __init__(self, parent = None):
         super().__init__(parent)
         self.initUI()
         self._init_scroll_animation()
@@ -58,7 +58,7 @@ class ChatArea(QScrollArea):
         self._scroll_anim = QPropertyAnimation(self.verticalScrollBar(), b"value", self)
         self._scroll_anim.setEasingCurve(QEasingCurve.Type.OutQuad)
     
-    def add_message(self, message, is_user=False):
+    def add_message(self, message, is_user = False):
         """Add a new message to the chat area"""
         # Remove the stretch before adding new message
         self.chat_layout.takeAt(self.chat_layout.count() - 1)

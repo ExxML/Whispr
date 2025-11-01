@@ -86,7 +86,7 @@ class Overlay(QWidget):
         
         # Create and add chat area
         self.chat_area = ChatArea(self)
-        main_layout.addWidget(self.chat_area, stretch=1)
+        main_layout.addWidget(self.chat_area, stretch = 1)
         
         # Create and add input bar
         self.input_bar = InputBar(self)
@@ -105,14 +105,14 @@ class Overlay(QWidget):
     def handle_message(self, message):
         """Handle when a message is sent from the input bar"""
         # Add user message to chat
-        self.chat_area.add_message(message, is_user=True)
-        self.clear_chat_button.save_message(self.chat_history_path, message, is_user=True)
+        self.chat_area.add_message(message, is_user = True)
+        self.clear_chat_button.save_message(self.chat_history_path, message, is_user = True)
         
         # TODO: Add bot response logic here
         # For now, add a simple echo response
         bot_response = f"Echo: {message}"
-        self.chat_area.add_message(bot_response, is_user=False)
-        self.clear_chat_button.save_message(self.chat_history_path, bot_response, is_user=False)
+        self.chat_area.add_message(bot_response, is_user = False)
+        self.clear_chat_button.save_message(self.chat_history_path, bot_response, is_user = False)
     
     def clear_chat(self):
         """Clear all chat messages from UI and chat_history.json"""

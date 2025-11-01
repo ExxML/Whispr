@@ -39,7 +39,7 @@ class ClearChat(QPushButton):
         })
 
         with open(chat_history_path, 'w') as f:
-            json.dump(history, f, indent=2)
+            json.dump(history, f, indent = 2)
 
 
     def clear_chat(self, chat_history_path, chat_area):

@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout
 class ChatBubble(QWidget):
     """A chat bubble widget for displaying messages"""
     
-    def __init__(self, message, is_user=False, parent=None):
+    def __init__(self, message, is_user = False, parent = None):
         super().__init__(parent)
         self.message = message
         self.is_user = is_user
