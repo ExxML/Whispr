@@ -1,12 +1,28 @@
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import QTimer, QPoint, QObject, pyqtSignal
+import math
 import keyboard
 
-class ShortcutManager:
+class ShortcutManager(QObject):
+    # Signal for safe threading (movement animation)
+    move_signal = pyqtSignal(int, int)
+    
     def __init__(self, overlay):
+        super().__init__()
         self.overlay = overlay
         self.is_visible = True
         self.setup_shortcuts()
         self.setup_movement_distances()
+
+        # Connect signal
+        self.move_signal.connect(self._start_animation)
+        # Initialize animation
+        self.animation_timer = QTimer()
+        self.animation_timer.timeout.connect(self._animate_step)
+        self.animation_active = False
+        self.animation_start_pos = None
+        self.animation_target_pos = None
+        self.animation_progress = 0.0
     
     def setup_shortcuts(self):
         """Setup all keyboard shortcuts with blocking behavior"""
@@ -34,28 +50,64 @@ class ShortcutManager:
     def setup_movement_distances(self):
         """Determine screen geometry and movement distances"""
         self.screen_rect = QApplication.primaryScreen().availableGeometry()
-        self.max_move_distance_x = self.screen_rect.width() // 10
-        self.max_move_distance_y = self.screen_rect.height() // 10
+        self.max_move_distance_x = self.screen_rect.width() // 14
+        self.max_move_distance_y = self.screen_rect.height() // 14
         self.screen_bounds_offset = 2 # Always keep 2 pixels to screen edge to prevent setGeometry errors
+        self.animation_duration = 100 # Animation duration in milliseconds
+        self.animation_fps = 120 # Frames per second
+        self.animation_frame_time = 1000 // self.animation_fps # Time per frame in ms
+    
+    def _animate_step(self):
+        """Animate one step of movement"""
+        # Increment progress
+        self.animation_progress += self.animation_frame_time / self.animation_duration
+        
+        if self.animation_progress >= 1.0:
+            # Animation complete
+            self.overlay.move(self.animation_target_pos)
+            self.animation_timer.stop()
+            self.animation_active = False
+        else:
+            # Ease-out sine motion: sin(t * π/2)
+            ease_progress = math.sin(self.animation_progress * math.pi / 2)
+            current_x = int(self.animation_start_pos.x() + (self.animation_target_pos.x() - self.animation_start_pos.x()) * ease_progress)
+            current_y = int(self.animation_start_pos.y() + (self.animation_target_pos.y() - self.animation_start_pos.y()) * ease_progress)
+            self.overlay.move(current_x, current_y)
+    
+    def _start_animation(self, target_x, target_y):
+        """Start animation"""
+        self.animation_start_pos = self.overlay.pos()
+        self.animation_target_pos = QPoint(target_x, target_y)
+        self.animation_progress = 0.0
+        self.animation_active = True
+        self.animation_timer.start(self.animation_frame_time)
     
     def move_window_left(self):
         """Move overlay window left"""
+        if self.animation_active and self.animation_progress < 0.5:
+            return
         new_x = max(self.screen_bounds_offset, self.overlay.geometry().x() - self.max_move_distance_x)
-        self.overlay.move(new_x, self.overlay.geometry().y())
+        self.move_signal.emit(new_x, self.overlay.geometry().y())
     
     def move_window_right(self):
         """Move overlay window right"""
+        if self.animation_active and self.animation_progress < 0.5:
+            return
         max_x = self.screen_rect.width() - self.overlay.geometry().width() - self.screen_bounds_offset
         new_x = min(max_x, self.overlay.geometry().x() + self.max_move_distance_x)
-        self.overlay.move(new_x, self.overlay.geometry().y())
+        self.move_signal.emit(new_x, self.overlay.geometry().y())
     
     def move_window_up(self):
         """Move overlay window up"""
+        if self.animation_active and self.animation_progress < 0.5:
+            return
         new_y = max(self.screen_bounds_offset, self.overlay.geometry().y() - self.max_move_distance_y)
-        self.overlay.move(self.overlay.geometry().x(), new_y)
+        self.move_signal.emit(self.overlay.geometry().x(), new_y)
     
     def move_window_down(self):
         """Move overlay window down"""
+        if self.animation_active and self.animation_progress < 0.5:
+            return
         max_y = self.screen_rect.height() - self.overlay.geometry().height() - self.screen_bounds_offset
         new_y = min(max_y, self.overlay.geometry().y() + self.max_move_distance_y)
-        self.overlay.move(self.overlay.geometry().x(), new_y)
+        self.move_signal.emit(self.overlay.geometry().x(), new_y)
