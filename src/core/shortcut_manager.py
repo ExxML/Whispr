@@ -118,8 +118,8 @@ class ShortcutManager(QObject):
     
     def scroll_up(self):
         """Scroll up in the chat area"""
-        self.scroll_signal.emit(-80)
+        self.scroll_signal.emit(-100)
     
     def scroll_down(self):
         """Scroll down in the chat area"""
-        self.scroll_signal.emit(80)
+        self.scroll_signal.emit(100)
