@@ -30,13 +30,16 @@ class ChatBubble(QWidget):
         fm = QFontMetrics(font)
         text_width = fm.horizontalAdvance(self.message) + 8 # additional offset for right spacing
         max_width = 450
-        padding = 14  # 7px left + 7px right
-        # Only enable word wrap if text exceeds max width
-        if text_width + padding > max_width:
-            message_label.setWordWrap(True)
+        total_text_width = text_width + 14 # 7px left + 7px right padding
+        # Set max width if text length exceeds max width
+        if total_text_width > max_width:
+            if total_text_width > max_width + 5:
+                # Only enable word wrap if text is long enough (prevents excessive top/bottom padding when text length is just above max width)
+                message_label.setWordWrap(True)
             message_label.setFixedWidth(max_width)
         else:
-            message_label.setFixedWidth(text_width + padding)
+            # If text is one line
+            message_label.setFixedWidth(total_text_width)
         
         # Style the bubble based on sender
         if self.is_user:
@@ -47,7 +50,7 @@ class ChatBubble(QWidget):
                     background-color: transparent;
                     border: 1px solid rgba(255, 255, 255, 1.0);
                     border-radius: 10px;
-                    padding: 5px 7px 2px 7px;  /* top, right, bottom, left */
+                    padding: 6px 7px 3px 7px;  /* top, right, bottom, left */
                 }
             """)
             layout.addStretch()
