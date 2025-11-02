@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPainter, QColor
+from PyQt6.QtGui import QPainter, QColor, QPen
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
 from .input_bar import InputBar
 from .chat_area import ChatArea
@@ -14,7 +14,6 @@ class Overlay(QWidget):
         
     def initUI(self):
         # Config variables
-        self.overlay_window_colour = "1E1E1E" # in hex
         self.window_width = 600
         self.window_height = 600
         self.chat_history_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'chat_history.json')
@@ -32,7 +31,6 @@ class Overlay(QWidget):
         # Window setup (position overlay at center-top on screen)
         screen_rect = QApplication.primaryScreen().availableGeometry()
         self.setGeometry((screen_rect.width() - self.window_width) // 2, 2, self.window_width, self.window_height)
-        self.setWindowOpacity(0.8)
         
         # Create main layout
         main_layout = QVBoxLayout(self)
@@ -124,14 +122,23 @@ class Overlay(QWidget):
         if app is not None:
             app.quit()
 
-    # Override paintEvent to render rounded corners on app window
+    # Override paintEvent to draw app window
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        # Rounded rectangle background
         rect = self.rect()
-        color = QColor(f"#{self.overlay_window_colour}")
         radius = 10
+        
+        # Draw window with rounded corners
+        r, g, b, a = (20, 20, 20, 0.8)
+        color = QColor(r, g, b, int(255 * a))
         painter.setBrush(color)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.drawRoundedRect(rect, radius, radius)
+        
+        # Draw window border
+        border_width = 1
+        border_rect = rect.adjusted(border_width, border_width, -border_width, -border_width)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(QColor(255, 255, 255, int(255 * 0.15)), border_width))
+        painter.drawRoundedRect(border_rect, radius, radius)

@@ -18,6 +18,7 @@ class ChatArea(QScrollArea):
         
         # Create container widget for messages
         self.chat_container = QWidget()
+        self.chat_container.setStyleSheet('background-color: transparent;')
         self.chat_layout = QVBoxLayout(self.chat_container)
         self.chat_layout.setContentsMargins(3, 3, 3, 3)
         self.chat_layout.setSpacing(0)
