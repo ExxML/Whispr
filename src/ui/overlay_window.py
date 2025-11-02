@@ -1,4 +1,4 @@
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer, QPoint
 from PyQt6.QtGui import QPainter, QColor, QPen
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
 from .input_bar import InputBar
@@ -6,6 +6,7 @@ from .chat_area import ChatArea
 from .clear_chat import ClearChat
 import os
 import ctypes
+from ctypes import wintypes
 
 class Overlay(QWidget):
     def __init__(self):
@@ -99,6 +100,45 @@ class Overlay(QWidget):
         result = ctypes.windll.user32.SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)
         if result == 0:
             print("Warning: SetWindowDisplayAffinity failed. May appear in screenshots.")
+        
+        # Setup timer to raise overlay so it is always visible (certain Windows operations override the stay on top hint)
+        self._visibility_timer = QTimer(self)
+        self._visibility_timer.setInterval(1000)
+        self._visibility_timer.timeout.connect(self.ensure_window_visible)
+        self._visibility_timer.start()
+
+    def ensure_window_visible(self):
+        try:
+            if not self._is_topmost_window():
+                self.raise_()
+        except Exception:
+            pass
+
+    def _is_topmost_window(self) -> bool:
+        try:
+            screen = QApplication.primaryScreen()
+            rect = self.frameGeometry()
+            scale = screen.devicePixelRatio()
+            ga_root = 2
+            self_hwnd = int(self.winId())
+            self_root = ctypes.windll.user32.GetAncestor(wintypes.HWND(self_hwnd), ga_root)
+            padding = 15
+            corners = [
+                rect.topLeft() + QPoint(padding, padding),
+                rect.topRight() + QPoint(-padding, padding),
+                rect.bottomLeft() + QPoint(padding, -padding),
+                rect.bottomRight() + QPoint(-padding, -padding)
+            ]
+            for corner in corners:
+                pt = wintypes.POINT(int(corner.x() * scale), int(corner.y() * scale))
+                hwnd_at_pt = ctypes.windll.user32.WindowFromPoint(pt)
+                if hwnd_at_pt:
+                    target_root = ctypes.windll.user32.GetAncestor(wintypes.HWND(hwnd_at_pt), ga_root)
+                    if int(self_root) != int(target_root):
+                        return False
+            return True
+        except Exception:
+            return True
     
     def handle_message(self, message):
         """Handle when a message is sent from the input bar"""
@@ -130,7 +170,7 @@ class Overlay(QWidget):
         radius = 10
         
         # Draw window with rounded corners
-        r, g, b, a = (20, 20, 20, 0.8)
+        r, g, b, a = (20, 20, 20, 0.7)
         color = QColor(r, g, b, int(255 * a))
         painter.setBrush(color)
         painter.setPen(Qt.PenStyle.NoPen)
