@@ -162,6 +162,11 @@ class Overlay(QWidget):
         if app is not None:
             app.quit()
 
+    # Override mousePressEvent to automatically set focus to input field
+    def mousePressEvent(self, event):
+        self.input_bar.input_field.setFocus()
+        super().mousePressEvent(event)
+
     # Override paintEvent to draw app window
     def paintEvent(self, event):
         painter = QPainter(self)
