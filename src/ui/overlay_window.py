@@ -24,10 +24,15 @@ class Overlay(QWidget):
             Qt.WindowType.FramelessWindowHint |
             Qt.WindowType.WindowStaysOnTopHint |
             Qt.WindowType.Tool
+            # Qt.WindowType.WindowTransparentForInput # Click-through
         )
 
         # Translucent bg for rounded corners
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        
+        # Prevent cursor from changing when hovering over the window
+        self.setAttribute(Qt.WidgetAttribute.WA_SetCursor, False)
+        self.unsetCursor()
         
         # Window setup (position overlay at center-top on screen)
         screen_rect = QApplication.primaryScreen().availableGeometry()
@@ -92,6 +97,9 @@ class Overlay(QWidget):
         self.input_bar.message_sent.connect(self.handle_message)
         main_layout.addWidget(self.input_bar)
         
+        # Unset cursor for all child widgets to preserve system cursor
+        self._unset_cursor_recursive(self)
+        
         self.show()
         
         # Set display affinity to exclude overlay from screen capture (Windows 10+)
@@ -106,6 +114,15 @@ class Overlay(QWidget):
         self._visibility_timer.setInterval(1000)
         self._visibility_timer.timeout.connect(self.ensure_window_visible)
         self._visibility_timer.start()
+
+    # Set cursor as default texture regardless of where it is hovering on the overlay
+    def _unset_cursor_recursive(self, widget):
+        """Recursively unset cursor for widget and all its children"""
+        widget.setAttribute(Qt.WidgetAttribute.WA_SetCursor, False)
+        widget.unsetCursor()
+        for child in widget.findChildren(QWidget):
+            child.setAttribute(Qt.WidgetAttribute.WA_SetCursor, False)
+            child.unsetCursor()
 
     def ensure_window_visible(self):
         try:
