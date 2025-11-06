@@ -12,14 +12,18 @@ class AIThread(QThread):
     error = pyqtSignal(str)
     progress = pyqtSignal(str)
     
-    def __init__(self, ai_manager, message):
+    def __init__(self, ai_manager, message, take_screenshot = False):
         super().__init__()
         self.ai_manager = ai_manager
         self.message = message
+        self.take_screenshot = take_screenshot
     
     def run(self):
         try:
-            response = self.ai_manager.generate_content(self.message, on_chunk = self._on_chunk)
+            if self.take_screenshot:
+                response = self.ai_manager.generate_content_with_screenshot(self.message, on_chunk = self._on_chunk)
+            else:
+                response = self.ai_manager.generate_content(self.message, on_chunk = self._on_chunk)
             self.finished.emit(response)
         except Exception as e:
             self.error.emit(str(e))
@@ -122,7 +126,7 @@ class Overlay(QWidget):
         main_layout.addWidget(self.chat_area, stretch = 1)
 
         # Add input bar
-        self.input_bar.message_sent.connect(self.handle_message)
+        self.input_bar.message_sent.connect(lambda msg: self.handle_message(msg, take_screenshot = False))
         main_layout.addWidget(self.input_bar)
 
         # Unset cursor for all child widgets to preserve system cursor
@@ -185,13 +189,13 @@ class Overlay(QWidget):
         except Exception:
             return True
 
-    def handle_message(self, message):
-        """Handle when a message is sent from the input bar"""
-        # Take a screenshot before processing the message
-        try:
-            self.screenshot_manager.take_screenshot()
-        except Exception:
-            self.chat_area.add_message("Error taking screenshot.", is_user = False)
+    def handle_message(self, message, take_screenshot = False):
+        """Handle a user message"""
+        if take_screenshot:
+            try:
+                self.screenshot_manager.take_screenshot()
+            except Exception:
+                self.chat_area.add_message("Error taking screenshot.", is_user = False)
         
         # Immediately add user's message to the chat area
         self.chat_area.add_message(message, is_user = True)
@@ -203,7 +207,7 @@ class Overlay(QWidget):
         self.chat_area.start_assistant_stream()
         
         # Create and start worker thread
-        self.worker = AIThread(self.ai_manager, message)
+        self.worker = AIThread(self.ai_manager, message, take_screenshot)
         self.worker.progress.connect(self.on_response_chunk)
         self.worker.finished.connect(self.on_response_ready)
         self.worker.error.connect(self.on_response_error)

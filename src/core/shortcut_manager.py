@@ -9,6 +9,9 @@ class ShortcutManager(QObject):
     scroll_signal = pyqtSignal(int)
     quit_signal = pyqtSignal()
     screenshot_signal = pyqtSignal()
+    clear_chat_signal = pyqtSignal()
+    minimize_signal = pyqtSignal()
+    generate_content_with_screenshot_signal = pyqtSignal(str, bool)
     
     def __init__(self, overlay, screenshot_manager):
         super().__init__()
@@ -19,10 +22,13 @@ class ShortcutManager(QObject):
         self.setup_movement_distances()
 
         # Connect signals
-        self.move_signal.connect(self._start_animation)
+        self.move_signal.connect(self._start_animation) # Signal needed because QTimers cannot be started from another thread
         self.scroll_signal.connect(self.overlay.chat_area.shortcut_scroll)
         self.quit_signal.connect(self.overlay.quit_app)
         self.screenshot_signal.connect(self.screenshot_manager.take_screenshot)
+        self.clear_chat_signal.connect(self.overlay.chat_area.clear_chat)
+        self.minimize_signal.connect(self.overlay.hide)
+        self.generate_content_with_screenshot_signal.connect(self.overlay.handle_message)
 
         # Initialize animation
         self.animation_timer = QTimer()
@@ -53,6 +59,9 @@ class ShortcutManager(QObject):
         keyboard.add_hotkey('Ctrl + Shift + Down', self.scroll_down, suppress = True)
         keyboard.add_hotkey('Ctrl + Shift + Q', self.close_app, suppress = True)
         keyboard.add_hotkey('Ctrl + Shift + C', self.screenshot, suppress = True)
+        keyboard.add_hotkey('Ctrl + Q', self.minimize, suppress = True)
+        keyboard.add_hotkey('Ctrl + N', self.clear_chat, suppress = True)
+        keyboard.add_hotkey('Ctrl + D', self.generate_with_screenshot, suppress = True)
     
     def unregister_hotkeys(self):
         """Unregister hotkeys that should only work when overlay is visible"""
@@ -64,6 +73,9 @@ class ShortcutManager(QObject):
         keyboard.remove_hotkey('Ctrl + Shift + Down')
         keyboard.remove_hotkey('Ctrl + Shift + Q')
         keyboard.remove_hotkey('Ctrl + Shift + C')
+        keyboard.remove_hotkey('Ctrl + Q')
+        keyboard.remove_hotkey('Ctrl + N')
+        keyboard.remove_hotkey('Ctrl + D')
     
     def setup_movement_distances(self):
         """Determine screen geometry and movement distances"""
@@ -156,3 +168,17 @@ class ShortcutManager(QObject):
     def screenshot(self):
         """Take a screenshot of the primary screen"""
         self.screenshot_signal.emit()
+        
+    def minimize(self):
+        """Minimize the overlay window"""
+        self.minimize_signal.emit()
+        self.is_visible = False
+        self.unregister_hotkeys()
+        
+    def clear_chat(self):
+        """Clear the chat history"""
+        self.clear_chat_signal.emit()
+        
+    def generate_with_screenshot(self):
+        """Automatically generate content with screenshot"""
+        self.generate_content_with_screenshot_signal.emit("Help me solve this programming problem.", True)
