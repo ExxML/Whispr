@@ -132,7 +132,7 @@ class ChatArea(QScrollArea):
     def is_scrolled_to_bottom(self):
         """Check if the scrollbar is at the bottom within a threshold"""
         # Arbitrary threshold so it won't scroll to bottom if the user has scrolled up mid-streaming message
-        threshold = 200
+        threshold = 250
         scrollbar = self.verticalScrollBar()
         return scrollbar.value() >= scrollbar.maximum() - threshold
     

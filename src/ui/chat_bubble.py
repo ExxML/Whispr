@@ -87,12 +87,12 @@ class ChatBubble(QWidget):
         
         # Replace **text** with <b>text</b>
         formatted_message = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', formatted_message)
-        # Replace `inline code` with formatted HTML
-        formatted_message = re.sub(
-            r'`([^`]+?)`', 
-            r'<code style="font-family: monospace; background-color: rgba(255,255,255,0.1); padding: 0.2em 0.4em; border-radius: 3px;">\1</code>', 
-            formatted_message
-        )
+        # # Replace `inline code` with formatted HTML
+        # formatted_message = re.sub(
+        #     r'`([^`]+?)`', 
+        #     r'<code style="font-family: monospace; background-color: rgba(255,255,255,0.1); padding: 0.2em 0.4em; border-radius: 3px;">\1</code>', 
+        #     formatted_message
+        # )
         # Replace newlines with <br> tags (but not inside code blocks)
         formatted_message = formatted_message.replace('\n', '<br>')
         
