@@ -1,6 +1,8 @@
 from PyQt6.QtWidgets import QScrollArea, QWidget, QVBoxLayout
 from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, QAbstractAnimation
 from .chat_bubble import ChatBubble
+import os
+import json
 
 class ChatArea(QScrollArea):
     """Scrollable chat area for displaying message history"""
@@ -9,6 +11,7 @@ class ChatArea(QScrollArea):
         super().__init__(parent)
         self.initUI()
         self._init_scroll_animation()
+        self.chat_history_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'chat_history.json')
         
     def initUI(self):
         # Configure scroll area
@@ -71,21 +74,44 @@ class ChatArea(QScrollArea):
         # Add stretch back at the end
         self.chat_layout.addStretch()
         
+        # Save the message to chat history
+        self.save_message(message, is_user)
+        
         # Scroll to bottom with smooth animation
         QTimer.singleShot(50, self.scroll_to_bottom)
+        
+    def save_message(self, message, is_user):
+        """Save a message to chat_history.json"""
+        try:
+            with open(self.chat_history_path, 'r') as f:
+                history = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            history = []
+
+        history.append({
+            "message": message,
+            "is_user": is_user
+        })
+
+        with open(self.chat_history_path, 'w') as f:
+            json.dump(history, f, indent = 2)
     
     def scroll_to_bottom(self):
         """Smoothly scroll to the bottom of the chat area"""
         scrollbar = self.verticalScrollBar()
         self._animate_to(scrollbar.maximum(), 100)
     
-    def clear_messages(self):
+    def clear_chat(self):
         """Clear all messages from the chat area"""
         # Remove all widgets except the stretch
         while self.chat_layout.count() > 1:
             item = self.chat_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+        
+        # Clear chat history (JSON file)
+        with open(self.chat_history_path, 'w') as f:
+            json.dump([], f)
     
     def shortcut_scroll(self, amount):
         """Scroll the chat area by a specified amount"""
