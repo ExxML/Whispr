@@ -94,13 +94,12 @@ class ChatArea(QScrollArea):
         self.chat_layout.addStretch()
         self.scroll_to_bottom()
     
-    def append_to_assistant_stream(self, chunk_text):
+    def append_to_stream(self, chunk_text):
         """Append text to the current streaming assistant bubble."""
         if self._streaming_bubble is None:
             return
         self._streaming_text += chunk_text
         self._streaming_bubble.set_message(self._streaming_text)
-        # Keep view pinned to bottom smoothly
         self.scroll_to_bottom()
     
     def finalize_assistant_stream(self):
@@ -109,7 +108,7 @@ class ChatArea(QScrollArea):
             return
         # Save final message
         self.save_message(self._streaming_text, is_user = False)
-        # Clear streaming state; bubble remains in layout
+        # Clear streaming state
         self._streaming_bubble = None
         self._streaming_text = ""
         self.scroll_to_bottom()

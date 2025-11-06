@@ -190,7 +190,7 @@ class Overlay(QWidget):
         # Take a screenshot before processing the message
         try:
             self.screenshot_manager.take_screenshot()
-        except Exception as e:
+        except Exception:
             self.chat_area.add_message("Error taking screenshot.", is_user = False)
         
         # Immediately add user's message to the chat area
@@ -209,7 +209,7 @@ class Overlay(QWidget):
         self.worker.error.connect(self.on_response_error)
         self.worker.start()
 
-    def on_response_ready(self, response):
+    def on_response_ready(self):
         """Handle successful AI response"""
         # Finalize streaming bubble and re-enable input
         self.chat_area.finalize_assistant_stream()
@@ -226,7 +226,7 @@ class Overlay(QWidget):
 
     def on_response_chunk(self, chunk):
         """Stream chunk text into the current assistant bubble"""
-        self.chat_area.append_to_assistant_stream(chunk)
+        self.chat_area.append_to_stream(chunk)
 
     def quit_app(self):
         self.chat_area.clear_chat()
