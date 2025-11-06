@@ -129,10 +129,18 @@ class ChatArea(QScrollArea):
         with open(self.chat_history_path, 'w') as f:
             json.dump(history, f, indent = 2)
     
-    def scroll_to_bottom(self):
-        """Smoothly scroll to the bottom of the chat area"""
+    def is_scrolled_to_bottom(self):
+        """Check if the scrollbar is at the bottom within a threshold"""
+        # Arbitrary threshold so it won't scroll to bottom if the user has scrolled up mid-streaming message
+        threshold = 200
         scrollbar = self.verticalScrollBar()
-        self._animate_to(scrollbar.maximum(), 100)
+        return scrollbar.value() >= scrollbar.maximum() - threshold
+    
+    def scroll_to_bottom(self):
+        """Smoothly scroll to the bottom of the chat area if at bottom or forced"""
+        if self.is_scrolled_to_bottom():
+            scrollbar = self.verticalScrollBar()
+            self._animate_to(scrollbar.maximum(), 100)
     
     def clear_chat(self):
         """Clear all messages from the chat area"""
