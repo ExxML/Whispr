@@ -186,7 +186,7 @@ class ShortcutManager(QObject):
             Help me solve this programming problem. Be concise.\n
             1. Give me 5 clarification questions to ask about the problem.\n
             2. Give me a concise, point-form plan to approach and solve this problem (including edge cases).\n
-            3. Give me a code block with the solution in Python.\n
+            3. Give me a code block with the solution in Python, supplied with comments.\n
             4. Give me a concise explanation of the solution.\n
             5. Give me the time and space complexity for the solution.
             """, 
