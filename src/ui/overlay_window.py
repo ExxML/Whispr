@@ -1,5 +1,5 @@
-from PyQt6.QtCore import Qt, QTimer, QPoint
 from PyQt6.QtGui import QPainter, QColor, QPen
+from PyQt6.QtCore import Qt, QTimer, QPoint, QThread, pyqtSignal
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
 from .input_bar import InputBar
 from .chat_area import ChatArea
@@ -7,12 +7,29 @@ from .clear_chat import ClearChat
 import ctypes
 from ctypes import wintypes
 
+class AIThread(QThread):
+    finished = pyqtSignal(str)
+    error = pyqtSignal(str)
+    
+    def __init__(self, ai_manager, message):
+        super().__init__()
+        self.ai_manager = ai_manager
+        self.message = message
+    
+    def run(self):
+        try:
+            response = self.ai_manager.generate_content(self.message)
+            self.finished.emit(response)
+        except Exception as e:
+            self.error.emit(str(e))
+
 class Overlay(QWidget):
     def __init__(self, ai_manager, screenshot_manager):
         super().__init__()
         self.initUI()
         self.ai_manager = ai_manager
         self.screenshot_manager = screenshot_manager
+        self.worker = None
         
     def initUI(self):
         # Config variables
@@ -170,24 +187,28 @@ class Overlay(QWidget):
         except Exception as e:
             self.chat_area.add_message("Error taking screenshot.", is_user = False)
         
-        # First add users message to the chat area
+        # Immediately add user's message to the chat area
         self.chat_area.add_message(message, is_user = True)
-        # Force the UI to update immediately
-        QApplication.processEvents()
         
         # Disable input while generating response
         self.input_bar.set_enabled(False)
         
-        # Generate AI response
-        try:
-            response = self.ai_manager.generate_content(message)
-            self.chat_area.add_message(response, is_user = False)
-        except Exception as e:
-            error_msg = f"Error generating response: {str(e)}"
-            self.chat_area.add_message(error_msg, is_user = False)
-        finally:
-            # Re-enable input
-            self.input_bar.set_enabled(True)
+        # Create and start worker thread
+        self.worker = AIThread(self.ai_manager, message)
+        self.worker.finished.connect(self.on_response_ready)
+        self.worker.error.connect(self.on_response_error)
+        self.worker.start()
+
+    def on_response_ready(self, response):
+        """Handle successful AI response"""
+        self.chat_area.add_message(response, is_user = False)
+        self.input_bar.set_enabled(True)
+        
+    def on_response_error(self, error):
+        """Handle AI response error"""
+        error_msg = f"Error generating response: {error}"
+        self.chat_area.add_message(error_msg, is_user = False)
+        self.input_bar.set_enabled(True)
 
     def quit_app(self):
         self.chat_area.clear_chat()
