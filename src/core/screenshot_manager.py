@@ -5,7 +5,6 @@ class ScreenshotManager:
     def __init__(self):
         self.screenshots_dir = Path(__file__).parent.parent / 'data' / 'cache' / 'screenshots'
         self.screenshots_dir.mkdir(parents = True, exist_ok = True)
-        self.sct = mss.mss()
 
     def take_screenshot(self):
         """
@@ -14,10 +13,12 @@ class ScreenshotManager:
         try:
             filepath = self.screenshots_dir / "screenshot.png"
             
-            # Screenshot the primary monitor
-            monitor = self.sct.monitors[1]  # 0 is all monitors, 1 is primary
-            screenshot = self.sct.grab(monitor)
-            mss.tools.to_png(screenshot.rgb, screenshot.size, output = str(filepath))
+            # Create a new mss instance for each call (thread-safe)
+            with mss.mss() as sct:
+                # Screenshot the primary monitor
+                monitor = sct.monitors[1]  # 0 is all monitors, 1 is primary
+                screenshot = sct.grab(monitor)
+                mss.tools.to_png(screenshot.rgb, screenshot.size, output = str(filepath))
 
         except Exception as e:
-            print(f"Screenshot Error taking screenshot: {str(e)}")
+            print(f"Error taking screenshot: {str(e)}")
