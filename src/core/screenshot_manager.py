@@ -1,14 +1,11 @@
-from PyQt6.QtCore import QObject
-from PyQt6.QtWidgets import QApplication
-import os
+from mss import mss
+from pathlib import Path
 
-class ScreenshotManager(QObject):
+class ScreenshotManager:
     def __init__(self):
-        super().__init__()
-        self.screenshots_dir = os.path.join(
-            os.path.dirname(__file__), '..', 'data', 'cache', 'screenshots'
-        )
-        os.makedirs(self.screenshots_dir, exist_ok = True)
+        self.screenshots_dir = Path(__file__).parent.parent / 'data' / 'cache' / 'screenshots'
+        self.screenshots_dir.mkdir(parents=True, exist_ok=True)
+        self.sct = mss()
 
     def take_screenshot(self):
         """
@@ -16,21 +13,19 @@ class ScreenshotManager(QObject):
         """
         try:
             # Generate filepath
-            filepath = os.path.join(self.screenshots_dir, "screenshot.png")
+            filepath = self.screenshots_dir / "screenshot.png"
             
-            # Get primary screen
-            screen = QApplication.primaryScreen()
-            if not screen:
-                print("Screenshot Error: Could not get primary screen")
-                
+            # Get the primary monitor
+            monitor = self.sct.monitors[1]  # 0 is all monitors, 1 is primary
+            
             # Take screenshot
-            screenshot = screen.grabWindow(0)
-            if screenshot.isNull():
-                print("Screenshot Error: Failed to take screenshot")
-                
-            # Save screenshot
-            if not screenshot.save(filepath, 'PNG'):
-                print(f"Screenshot Error: Failed to save screenshot to {filepath}")
+            screenshot = self.sct.grab(monitor)
+            
+            # Save the screenshot
+            mss.tools.to_png(screenshot.rgb, screenshot.size, output = str(filepath))
 
         except Exception as e:
             print(f"Screenshot Error taking screenshot: {str(e)}")
+
+        finally:
+            self.sct.close()
