@@ -1,6 +1,6 @@
 TODO.md
 __pycache__/
 .env
-data/cache/
+src/data/cache/
 whispr.build/
 whispr.dist/
