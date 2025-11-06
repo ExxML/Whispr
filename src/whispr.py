@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QApplication
 from ui.overlay_window import Overlay
 from core.shortcut_manager import ShortcutManager
+from core.screenshot_manager import ScreenshotManager
 import os
 import sys
 import json
@@ -13,6 +14,7 @@ if __name__ == '__main__':
     
     app = QApplication(sys.argv)
     overlay = Overlay()
-    shortcut_manager = ShortcutManager(overlay)
+    screenshot_manager = ScreenshotManager()
+    shortcut_manager = ShortcutManager(overlay, screenshot_manager)
     
     sys.exit(app.exec())

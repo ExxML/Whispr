@@ -8,10 +8,12 @@ class ShortcutManager(QObject):
     move_signal = pyqtSignal(int, int)
     scroll_signal = pyqtSignal(int)
     quit_signal = pyqtSignal()
+    screenshot_signal = pyqtSignal()
     
-    def __init__(self, overlay):
+    def __init__(self, overlay, screenshot_manager):
         super().__init__()
         self.overlay = overlay
+        self.screenshot_manager = screenshot_manager
         self.is_visible = True
         self.setup_shortcuts()
         self.setup_movement_distances()
@@ -20,6 +22,8 @@ class ShortcutManager(QObject):
         self.move_signal.connect(self._start_animation)
         self.scroll_signal.connect(self.overlay.chat_area.shortcut_scroll)
         self.quit_signal.connect(self.overlay.quit_app)
+        self.screenshot_signal.connect(self.screenshot_manager.take_screenshot)
+
         # Initialize animation
         self.animation_timer = QTimer()
         self.animation_timer.timeout.connect(self._animate_step)
@@ -48,6 +52,7 @@ class ShortcutManager(QObject):
         keyboard.add_hotkey('Ctrl + Shift + Up', self.scroll_up, suppress = True)
         keyboard.add_hotkey('Ctrl + Shift + Down', self.scroll_down, suppress = True)
         keyboard.add_hotkey('Ctrl + Shift + Q', self.close_app, suppress = True)
+        keyboard.add_hotkey('Ctrl + Shift + C', self.screenshot, suppress = True)
     
     def unregister_hotkeys(self):
         """Unregister hotkeys that should only work when overlay is visible"""
@@ -58,17 +63,7 @@ class ShortcutManager(QObject):
         keyboard.remove_hotkey('Ctrl + Shift + Up')
         keyboard.remove_hotkey('Ctrl + Shift + Down')
         keyboard.remove_hotkey('Ctrl + Shift + Q')
-    
-    def toggle_overlay(self):
-        """Toggle overlay visibility"""
-        if self.is_visible:
-            self.overlay.hide()
-            self.unregister_hotkeys()
-        else:
-            self.overlay.show()
-            self.overlay.raise_() # Bring to front
-            self.register_hotkeys()
-        self.is_visible = not self.is_visible
+        keyboard.remove_hotkey('Ctrl + Shift + C')
     
     def setup_movement_distances(self):
         """Determine screen geometry and movement distances"""
@@ -104,6 +99,17 @@ class ShortcutManager(QObject):
         self.animation_progress = 0.0
         self.animation_active = True
         self.animation_timer.start(self.animation_frame_time)
+
+    def toggle_overlay(self):
+        """Toggle overlay visibility"""
+        if self.is_visible:
+            self.overlay.hide()
+            self.unregister_hotkeys()
+        else:
+            self.overlay.show()
+            self.overlay.raise_() # Bring to front
+            self.register_hotkeys()
+        self.is_visible = not self.is_visible
     
     def move_window_left(self):
         """Move overlay window left"""
@@ -146,3 +152,7 @@ class ShortcutManager(QObject):
     def close_app(self):
         """Close the application"""
         self.quit_signal.emit() # Must emit signal to run on main thread
+        
+    def screenshot(self):
+        """Take a screenshot of the primary screen"""
+        self.screenshot_signal.emit()
