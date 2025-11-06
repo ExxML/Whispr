@@ -85,6 +85,13 @@ class ChatBubble(QWidget):
             flags = re.DOTALL
         )
         
+        # Format headers
+        formatted_message = re.sub(r'^#####\s+(.+?)(<br>|$)', r'<h5>\1</h5>', formatted_message, flags = re.MULTILINE)
+        formatted_message = re.sub(r'^####\s+(.+?)(<br>|$)', r'<h4>\1</h4>', formatted_message, flags = re.MULTILINE)
+        formatted_message = re.sub(r'^###\s+(.+?)(<br>|$)', r'<h3>\1</h3>', formatted_message, flags = re.MULTILINE)
+        formatted_message = re.sub(r'^##\s+(.+?)(<br>|$)', r'<h2>\1</h2>', formatted_message, flags = re.MULTILINE)
+        formatted_message = re.sub(r'^#\s+(.+?)(<br>|$)', r'<h1>\1</h1>', formatted_message, flags = re.MULTILINE)
+        
         # Replace **text** with <b>text</b>
         formatted_message = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', formatted_message)
         # # Replace `inline code` with formatted HTML
@@ -94,7 +101,8 @@ class ChatBubble(QWidget):
         #     formatted_message
         # )
         # Replace newlines with <br> tags (but not inside code blocks)
-        formatted_message = formatted_message.replace('\n', '<br>')
+        # formatted_message = formatted_message.replace('\n', '<br>')
+        formatted_message = re.sub(r'(?<!</h[1-5]>)\n(?!<h[1-5]>)', '<br>', formatted_message)
         
         html_message = f'<div style="line-height: 1.2;">{formatted_message}</div>'
         self.message_label.setText(html_message)
@@ -108,9 +116,9 @@ class ChatBubble(QWidget):
         # Create formatted code block with monospace font and dark background
         formatted_code = (
             '<div style="'
-            'background-color: rgba(0, 0, 0, 0.5); '
+            'background-color: rgba(0, 0, 0, 0.3); '
             'color: rgba(255, 255, 255, 1.0); '
-            'font-family: Consolas, Monaco, \'Courier New\', monospace; '
+            'font-family: "Cascadia Code", monospace; '
             'white-space: pre-wrap; '
             'word-wrap: break-word; '
             'word-break: break-word; '
