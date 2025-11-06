@@ -1,13 +1,17 @@
 from PyQt6.QtGui import QPainter, QColor, QPen
-from PyQt6.QtCore import Qt, QTimer, QPoint, QThread, pyqtSignal
+from PyQt6.QtCore import Qt, QTimer, QPoint, QObject, pyqtSignal
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
 from .input_bar import InputBar
 from .chat_area import ChatArea
 from .clear_chat import ClearChat
-import ctypes
 from ctypes import wintypes
+import ctypes
+import threading
 
-class AIThread(QThread):
+class AIThread(QObject):
+    """Separate thread for AI response streaming"""
+    # Separate thread is needed because Qt requires all GUI operations to happen on the main thread
+    # Using threading instead of QThread due to compilation issues with Nuitka
     finished = pyqtSignal(str)
     error = pyqtSignal(str)
     progress = pyqtSignal(str)
@@ -17,14 +21,20 @@ class AIThread(QThread):
         self.ai_manager = ai_manager
         self.message = message
         self.take_screenshot = take_screenshot
+        self._thread = None
+    
+    def start(self):
+        self._thread = threading.Thread(target = self.run, daemon = True)
+        self._thread.start()
     
     def run(self):
         try:
             if self.take_screenshot:
-                response = self.ai_manager.generate_content_with_screenshot(self.message, on_chunk = self._on_chunk)
+                response = self.ai_manager.generate_content_with_screenshot(self.message, self._on_chunk)
             else:
-                response = self.ai_manager.generate_content(self.message, on_chunk = self._on_chunk)
+                response = self.ai_manager.generate_content(self.message, self._on_chunk)
             self.finished.emit(response)
+        
         except Exception as e:
             self.error.emit(str(e))
     
