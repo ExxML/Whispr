@@ -4,20 +4,20 @@ from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPu
 from .input_bar import InputBar
 from .chat_area import ChatArea
 from .clear_chat import ClearChat
-import os
 import ctypes
 from ctypes import wintypes
 
 class Overlay(QWidget):
-    def __init__(self):
+    def __init__(self, ai_manager, screenshot_manager):
         super().__init__()
         self.initUI()
+        self.ai_manager = ai_manager
+        self.screenshot_manager = screenshot_manager
         
     def initUI(self):
         # Config variables
         self.window_width = 600
         self.window_height = 600
-        self.chat_history_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'chat_history.json')
 
         # Set window flags for overlay behavior
         self.setWindowFlags(
@@ -43,7 +43,14 @@ class Overlay(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
         
-        self.clear_chat_button = ClearChat(self, self.clear_chat)
+        # Create chat area
+        self.chat_area = ChatArea(self)
+        
+        # Create input bar
+        self.input_bar = InputBar(self)
+
+        # Create and add title bar buttons
+        self.clear_chat_button = ClearChat(self, self.chat_area.clear_chat, self.chat_area)
         header_layout = QHBoxLayout()
         header_layout.addWidget(self.clear_chat_button)
         header_layout.addStretch(1)
@@ -87,16 +94,14 @@ class Overlay(QWidget):
         header_layout.addWidget(self.min_btn)
         header_layout.addWidget(self.close_btn)
         main_layout.addLayout(header_layout)
-        
-        # Create and add chat area
-        self.chat_area = ChatArea(self)
+
+        # Add chat area
         main_layout.addWidget(self.chat_area, stretch = 1)
-        
-        # Create and add input bar
-        self.input_bar = InputBar(self)
+
+        # Add input bar
         self.input_bar.message_sent.connect(self.handle_message)
         main_layout.addWidget(self.input_bar)
-        
+
         # Unset cursor for all child widgets to preserve system cursor
         self._unset_cursor_recursive(self)
         
@@ -156,25 +161,36 @@ class Overlay(QWidget):
             return True
         except Exception:
             return True
-    
+
     def handle_message(self, message):
         """Handle when a message is sent from the input bar"""
-        # Add user message to chat
-        self.chat_area.add_message(message, is_user = True)
-        self.clear_chat_button.save_message(self.chat_history_path, message, is_user = True)
+        # Take a screenshot before processing the message
+        try:
+            self.screenshot_manager.take_screenshot()
+        except Exception as e:
+            self.chat_area.add_message("Error taking screenshot.", is_user = False)
         
-        # TODO: Add bot response logic here
-        # For now, add a simple echo response
-        bot_response = f"Echo: {message}"
-        self.chat_area.add_message(bot_response, is_user = False)
-        self.clear_chat_button.save_message(self.chat_history_path, bot_response, is_user = False)
-    
-    def clear_chat(self):
-        """Clear all chat messages from UI and chat_history.json"""
-        self.clear_chat_button.clear_chat(self.chat_history_path, self.chat_area)
+        # First add users message to the chat area
+        self.chat_area.add_message(message, is_user = True)
+        # Force the UI to update immediately
+        QApplication.processEvents()
+        
+        # Disable input while generating response
+        self.input_bar.set_enabled(False)
+        
+        # Generate AI response
+        try:
+            response = self.ai_manager.generate_content(message)
+            self.chat_area.add_message(response, is_user = False)
+        except Exception as e:
+            error_msg = f"Error generating response: {str(e)}"
+            self.chat_area.add_message(error_msg, is_user = False)
+        finally:
+            # Re-enable input
+            self.input_bar.set_enabled(True)
 
     def quit_app(self):
-        self.clear_chat()
+        self.chat_area.clear_chat()
         app = QApplication.instance()
         if app is not None:
             app.quit()
