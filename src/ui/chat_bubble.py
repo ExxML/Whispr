@@ -75,11 +75,51 @@ class ChatBubble(QWidget):
     def set_message(self, message):
         # Parse markdown formatting in the generated response
         self.message = message
-
+        
+        # First replace Python code blocks with formatted HTML
+        formatted_message = self.message
+        formatted_message = re.sub(
+            r'```python\n(.*?)\n```',
+            self._format_code_block,
+            formatted_message,
+            flags = re.DOTALL
+        )
+        
         # Replace **text** with <b>text</b>
-        formatted_message = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', self.message)
-        # Replace newlines with <br> tags
+        formatted_message = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', formatted_message)
+        # Replace `inline code` with formatted HTML
+        formatted_message = re.sub(
+            r'`([^`]+?)`', 
+            r'<code style="font-family: monospace; background-color: rgba(255,255,255,0.1); padding: 0.2em 0.4em; border-radius: 3px;">\1</code>', 
+            formatted_message
+        )
+        # Replace newlines with <br> tags (but not inside code blocks)
         formatted_message = formatted_message.replace('\n', '<br>')
         
         html_message = f'<div style="line-height: 1.2;">{formatted_message}</div>'
         self.message_label.setText(html_message)
+    
+    def _format_code_block(self, match):
+        """Format a Python code block"""
+        code = match.group(1)
+        # Replace HTML special characters
+        code = code.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        
+        # Create formatted code block with monospace font and dark background
+        formatted_code = (
+            '<div style="'
+            'background-color: rgba(0, 0, 0, 0.5); '
+            'color: rgba(255, 255, 255, 1.0); '
+            'font-family: Consolas, Monaco, \'Courier New\', monospace; '
+            'white-space: pre-wrap; '
+            'word-wrap: break-word; '
+            'word-break: break-word; '
+            'tab-size: 4; '
+            '-moz-tab-size: 4; '
+            'text-align: left;' 
+            '">'
+            f'<code style="white-space: pre-wrap;">{code}</code>'
+            '</div>'
+        )
+        
+        return formatted_code
