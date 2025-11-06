@@ -34,11 +34,10 @@ class AIThread(QThread):
             self.progress.emit(text)
 
 class Overlay(QWidget):
-    def __init__(self, ai_manager, screenshot_manager):
+    def __init__(self, ai_manager):
         super().__init__()
         self.initUI()
         self.ai_manager = ai_manager
-        self.screenshot_manager = screenshot_manager
         self.worker = None
         
     def initUI(self):
@@ -191,12 +190,6 @@ class Overlay(QWidget):
 
     def handle_message(self, message, take_screenshot = False):
         """Handle a user message"""
-        if take_screenshot:
-            try:
-                self.screenshot_manager.take_screenshot()
-            except Exception:
-                self.chat_area.add_message("Error taking screenshot.", is_user = False)
-        
         # Immediately add user's message to the chat area
         self.chat_area.add_message(message, is_user = True)
         

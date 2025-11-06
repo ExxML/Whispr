@@ -14,9 +14,9 @@ if __name__ == '__main__':
         json.dump([], f)
     
     app = QApplication(sys.argv)
-    ai_manager = AIManager()
     screenshot_manager = ScreenshotManager()
-    overlay = Overlay(ai_manager, screenshot_manager)
+    ai_manager = AIManager(screenshot_manager)
+    overlay = Overlay(ai_manager)
     shortcut_manager = ShortcutManager(overlay, screenshot_manager)
     
     sys.exit(app.exec())

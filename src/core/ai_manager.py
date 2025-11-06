@@ -5,12 +5,14 @@ from google.genai import types
 from dotenv import load_dotenv
 
 class AIManager:
-    def __init__(self):
+    def __init__(self, screenshot_manager):
         # Load environment variables from the .env file
         load_dotenv(Path(__file__).parent.parent.parent / '.env')
         
         # Initialize Gemini client
         self.client = genai.Client(api_key = os.getenv('GEMINI_API_KEY'))
+        
+        self.screenshot_manager = screenshot_manager
 
     def generate_content(self, user_input, on_chunk = None):
         full_response = ""
@@ -36,6 +38,9 @@ class AIManager:
         return full_response
 
     def generate_content_with_screenshot(self, user_input, on_chunk = None):
+        # Take screenshot
+        self.screenshot_manager.take_screenshot()
+
         # Read the screenshot
         with open("./src/data/cache/screenshots/screenshot.png", "rb") as f:
             image_bytes = f.read()
