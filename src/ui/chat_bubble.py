@@ -113,6 +113,9 @@ class ChatBubble(QWidget):
         # Replace HTML special characters
         code = code.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
         
+        # Color comments in dark green (can be anywhere in the line)
+        code = re.sub(r'(#.*?)(?=\n|$)', r'<span style="color: #749852;">\1</span>', code, flags = re.MULTILINE)
+        
         # Create formatted code block with monospace font and dark background
         formatted_code = (
             '<div style="'
