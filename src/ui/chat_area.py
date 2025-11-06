@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QScrollArea, QWidget, QVBoxLayout
-from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, QAbstractAnimation
+from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QAbstractAnimation
 from .chat_bubble import ChatBubble
 import os
 import json
@@ -12,6 +12,8 @@ class ChatArea(QScrollArea):
         self.initUI()
         self._init_scroll_animation()
         self.chat_history_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'chat_history.json')
+        self._streaming_bubble = None
+        self._streaming_text = ""
         
     def initUI(self):
         # Configure scroll area
@@ -78,7 +80,39 @@ class ChatArea(QScrollArea):
         self.save_message(message, is_user)
         
         # Scroll to bottom with smooth animation
-        QTimer.singleShot(50, self.scroll_to_bottom)
+        self.scroll_to_bottom()
+    
+    def start_assistant_stream(self):
+        """Create an assistant bubble to stream content into (not saved until finalized)."""
+        if self._streaming_bubble is not None:
+            return
+        # Remove stretch, add empty assistant bubble, then add stretch back
+        self.chat_layout.takeAt(self.chat_layout.count() - 1)
+        self._streaming_bubble = ChatBubble("", is_user = False)
+        self._streaming_text = ""
+        self.chat_layout.addWidget(self._streaming_bubble)
+        self.chat_layout.addStretch()
+        self.scroll_to_bottom()
+    
+    def append_to_assistant_stream(self, chunk_text):
+        """Append text to the current streaming assistant bubble."""
+        if self._streaming_bubble is None:
+            return
+        self._streaming_text += chunk_text
+        self._streaming_bubble.set_message(self._streaming_text)
+        # Keep view pinned to bottom smoothly
+        self.scroll_to_bottom()
+    
+    def finalize_assistant_stream(self):
+        """Persist the streamed assistant message and clear streaming state."""
+        if self._streaming_bubble is None:
+            return
+        # Save final message
+        self.save_message(self._streaming_text, is_user = False)
+        # Clear streaming state; bubble remains in layout
+        self._streaming_bubble = None
+        self._streaming_text = ""
+        self.scroll_to_bottom()
         
     def save_message(self, message, is_user):
         """Save a message to chat_history.json"""

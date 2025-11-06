@@ -10,6 +10,7 @@ from ctypes import wintypes
 class AIThread(QThread):
     finished = pyqtSignal(str)
     error = pyqtSignal(str)
+    progress = pyqtSignal(str)
     
     def __init__(self, ai_manager, message):
         super().__init__()
@@ -18,10 +19,15 @@ class AIThread(QThread):
     
     def run(self):
         try:
-            response = self.ai_manager.generate_content(self.message)
+            response = self.ai_manager.generate_content(self.message, on_chunk = self._on_chunk)
             self.finished.emit(response)
         except Exception as e:
             self.error.emit(str(e))
+    
+    def _on_chunk(self, text):
+        # Emit chunk text to UI thread
+        if text:
+            self.progress.emit(text)
 
 class Overlay(QWidget):
     def __init__(self, ai_manager, screenshot_manager):
@@ -193,22 +199,34 @@ class Overlay(QWidget):
         # Disable input while generating response
         self.input_bar.set_enabled(False)
         
+        # Prepare streaming assistant bubble
+        self.chat_area.start_assistant_stream()
+        
         # Create and start worker thread
         self.worker = AIThread(self.ai_manager, message)
+        self.worker.progress.connect(self.on_response_chunk)
         self.worker.finished.connect(self.on_response_ready)
         self.worker.error.connect(self.on_response_error)
         self.worker.start()
 
     def on_response_ready(self, response):
         """Handle successful AI response"""
-        self.chat_area.add_message(response, is_user = False)
+        # Finalize streaming bubble and re-enable input
+        self.chat_area.finalize_assistant_stream()
         self.input_bar.set_enabled(True)
         
     def on_response_error(self, error):
         """Handle AI response error"""
         error_msg = f"Error generating response: {error}"
+        # Finalize any in-progress stream, then add error as a separate message
+        if self.chat_area._streaming_bubble is not None:
+            self.chat_area.finalize_assistant_stream()
         self.chat_area.add_message(error_msg, is_user = False)
         self.input_bar.set_enabled(True)
+
+    def on_response_chunk(self, chunk):
+        """Stream chunk text into the current assistant bubble"""
+        self.chat_area.append_to_assistant_stream(chunk)
 
     def quit_app(self):
         self.chat_area.clear_chat()

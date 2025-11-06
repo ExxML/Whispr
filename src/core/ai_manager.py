@@ -12,7 +12,7 @@ class AIManager:
         # Initialize Gemini client
         self.client = genai.Client(api_key = os.getenv('GEMINI_API_KEY'))
 
-    def generate_content(self, user_input):
+    def generate_content(self, user_input, on_chunk = None):
         full_response = ""
         # Stream generation
         for chunk in self.client.models.generate_content_stream(
@@ -27,10 +27,15 @@ class AIManager:
             if chunk.text:
                 full_response += chunk.text
                 print(chunk.text, end = "", flush = True)
+                if on_chunk is not None:
+                    try:
+                        on_chunk(chunk.text)
+                    except Exception:
+                        pass
 
         return full_response
 
-    def generate_content_with_screenshot(self, user_input):
+    def generate_content_with_screenshot(self, user_input, on_chunk = None):
         # Read the screenshot
         with open("./src/data/cache/screenshots/screenshot.png", "rb") as f:
             image_bytes = f.read()
@@ -53,5 +58,10 @@ class AIManager:
             if chunk.text:
                 full_response += chunk.text
                 print(chunk.text, end = "", flush = True)
+                if on_chunk is not None:
+                    try:
+                        on_chunk(chunk.text)
+                    except Exception:
+                        pass
 
         return full_response
