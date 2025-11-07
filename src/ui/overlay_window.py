@@ -52,7 +52,7 @@ class Overlay(QWidget):
         
     def initUI(self):
         # Config variables
-        self.window_width = 600
+        self.window_width = 550
         self.window_height = 600
 
         # Set window flags for overlay behavior
@@ -216,6 +216,8 @@ class Overlay(QWidget):
         self.worker.error.connect(self.on_response_error)
         self.worker.start()
 
+        self.chat_area.scroll_to_bottom()
+
     def on_response_ready(self):
         """Handle successful AI response"""
         # Finalize streaming bubble and re-enable input
@@ -254,7 +256,7 @@ class Overlay(QWidget):
         radius = 10
         
         # Draw window with rounded corners
-        r, g, b, a = (20, 20, 20, 0.7)
+        r, g, b, a = (20, 20, 20, 0.6)
         color = QColor(r, g, b, int(255 * a))
         painter.setBrush(color)
         painter.setPen(Qt.PenStyle.NoPen)

@@ -6,8 +6,8 @@ import re
 class ChatBubble(QWidget):
     """A chat bubble widget for displaying messages"""
     
-    def __init__(self, message, is_user = False, parent = None):
-        super().__init__(parent)
+    def __init__(self, message, is_user = False):
+        super().__init__()
         self.message = message
         self.is_user = is_user
         self.initUI()
@@ -43,7 +43,7 @@ class ChatBubble(QWidget):
             # Calculate text width to determine if wrapping is needed
             fm = QFontMetrics(font)
             text_width = fm.horizontalAdvance(self.message) + 8 # additional offset for right spacing
-            max_width = 450
+            max_width = 400
             total_text_width = text_width + 14 # 7px left + 7px right padding
             # Set max width if text length exceeds max width
             if total_text_width > max_width:
@@ -66,7 +66,7 @@ class ChatBubble(QWidget):
                 }
             """)
             self.message_label.setWordWrap(True)
-            self.message_label.setFixedWidth(550)
+            self.message_label.setFixedWidth(500)
             layout.addWidget(self.message_label)
             layout.addStretch()
         
@@ -119,7 +119,7 @@ class ChatBubble(QWidget):
         # Create formatted code block with monospace font and dark background
         formatted_code = (
             '<div style="'
-            'background-color: rgba(0, 0, 0, 0.3); '
+            'background-color: rgba(0, 0, 0, 0.08); '
             'color: rgba(255, 255, 255, 1.0); '
             'font-family: "Cascadia Code", monospace; '
             'white-space: pre-wrap; '
