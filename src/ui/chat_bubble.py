@@ -23,8 +23,7 @@ class ChatBubble(QWidget):
         self.message_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         
         # Set font
-        font = QFont("Microsoft JhengHei", 10)
-        font.setPointSizeF(10.5)
+        font = QFont("Helvetica", 11)
         self.message_label.setFont(font)
         
         # Style the bubble based on sender
@@ -104,7 +103,7 @@ class ChatBubble(QWidget):
         # formatted_message = formatted_message.replace('\n', '<br>')
         formatted_message = re.sub(r'(?<!</h[1-5]>)\n(?!<h[1-5]>)', '<br>', formatted_message)
         
-        html_message = f'<div style="line-height: 1.2;">{formatted_message}</div>'
+        html_message = f'<div style="line-height: 1.4;">{formatted_message}</div>'
         self.message_label.setText(html_message)
     
     def _format_code_block(self, match):
@@ -121,7 +120,8 @@ class ChatBubble(QWidget):
             '<div style="'
             'background-color: rgba(0, 0, 0, 0.08); '
             'color: rgba(255, 255, 255, 1.0); '
-            'font-family: "Cascadia Code", monospace; '
+            'font-family: JetBrains Mono; '
+            'font-size: 11pt; '
             'white-space: pre-wrap; '
             'word-wrap: break-word; '
             'word-break: break-word; '
@@ -129,7 +129,7 @@ class ChatBubble(QWidget):
             '-moz-tab-size: 4; '
             'text-align: left;' 
             '">'
-            f'<code style="white-space: pre-wrap;">{code}</code>'
+            f'<span style="white-space: pre-wrap;">{code}</span>'
             '</div>'
         )
         
