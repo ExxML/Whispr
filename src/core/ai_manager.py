@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
@@ -6,8 +7,8 @@ from dotenv import load_dotenv
 class AIManager:
     def __init__(self, screenshot_manager):
         # Load environment variables from the .env file
-        base_dir = os.getcwd()
-        load_dotenv(os.path.join(base_dir, '.env'))
+        base_dir = Path(__file__).resolve().parent.parent.parent
+        load_dotenv(base_dir / '.env')
         
         # Initialize Gemini client
         self.client = genai.Client(api_key = os.getenv('GEMINI_API_KEY'))
