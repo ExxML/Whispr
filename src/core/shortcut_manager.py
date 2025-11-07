@@ -62,6 +62,7 @@ class ShortcutManager(QObject):
         keyboard.add_hotkey('Ctrl + Q', self.minimize, suppress = True)
         keyboard.add_hotkey('Ctrl + N', self.clear_chat, suppress = True)
         keyboard.add_hotkey('Ctrl + D', self.generate_with_screenshot, suppress = True, trigger_on_release = True)
+        keyboard.add_hotkey('Ctrl + G', self.generate_with_screenshot_fix, suppress = True, trigger_on_release = True)
     
     def unregister_hotkeys(self):
         """Unregister hotkeys that should only work when overlay is visible"""
@@ -76,6 +77,7 @@ class ShortcutManager(QObject):
         keyboard.remove_hotkey('Ctrl + Q')
         keyboard.remove_hotkey('Ctrl + N')
         keyboard.remove_hotkey('Ctrl + D')
+        keyboard.remove_hotkey('Ctrl + G')
     
     def setup_movement_distances(self):
         """Determine screen geometry and movement distances"""
@@ -190,5 +192,12 @@ class ShortcutManager(QObject):
             5. Give me a code block with the solution in Python, supplied with comments.
             6. Give me a concise explanation of the solution.
             7. Give me the time and space complexity for the solution.""", 
+            True # Take a screenshot
+        )
+        
+    def generate_with_screenshot_fix(self):
+        """Automatically generate content with screenshot for fixing/improving code"""
+        self.generate_content_with_screenshot_signal.emit(
+            "Fix or improve the code based on the new instructions.", 
             True # Take a screenshot
         )
