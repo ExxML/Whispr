@@ -78,7 +78,7 @@ class ChatBubble(QWidget):
         # First replace Python code blocks with formatted HTML
         formatted_message = self.message
         formatted_message = re.sub(
-            r'```(?:\w*\n)?(.*?)\n```',
+            r'```(.*?)```',
             self._format_code_block,
             formatted_message,
             flags = re.DOTALL
