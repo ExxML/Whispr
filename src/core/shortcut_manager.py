@@ -61,7 +61,7 @@ class ShortcutManager(QObject):
         keyboard.add_hotkey('Ctrl + Shift + C', self.screenshot, suppress = True)
         keyboard.add_hotkey('Ctrl + Q', self.minimize, suppress = True)
         keyboard.add_hotkey('Ctrl + N', self.clear_chat, suppress = True)
-        keyboard.add_hotkey('Ctrl + D', self.generate_with_screenshot, suppress = True)
+        keyboard.add_hotkey('Ctrl + D', self.generate_with_screenshot, suppress = True, trigger_on_release = True)
     
     def unregister_hotkeys(self):
         """Unregister hotkeys that should only work when overlay is visible"""
