@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
@@ -7,7 +6,8 @@ from dotenv import load_dotenv
 class AIManager:
     def __init__(self, screenshot_manager):
         # Load environment variables from the .env file
-        load_dotenv(Path(__file__).parent.parent.parent / '.env')
+        base_dir = os.getcwd()
+        load_dotenv(os.path.join(base_dir, '.env'))
         
         # Initialize Gemini client
         self.client = genai.Client(api_key = os.getenv('GEMINI_API_KEY'))
@@ -42,7 +42,9 @@ class AIManager:
         self.screenshot_manager.take_screenshot()
 
         # Read the screenshot
-        with open("./src/data/cache/screenshots/screenshot.png", "rb") as f:
+        base_dir = os.getcwd()
+        screenshot_path = os.path.join(base_dir, "src", "data", "cache", "screenshots", "screenshot.png")
+        with open(screenshot_path, "rb") as f:
             image_bytes = f.read()
 
         full_response = ""

@@ -1,10 +1,10 @@
+import os
 import mss
-from pathlib import Path
 
 class ScreenshotManager:
     def __init__(self):
-        self.screenshots_dir = Path(__file__).parent.parent / 'data' / 'cache' / 'screenshots'
-        self.screenshots_dir.mkdir(parents = True, exist_ok = True)
+        base_dir = os.getcwd()
+        self.screenshots_dir = os.path.join(base_dir, 'src', 'data', 'cache', 'screenshots')
 
     def take_screenshot(self):
         """

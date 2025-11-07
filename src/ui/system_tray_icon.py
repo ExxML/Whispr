@@ -5,7 +5,8 @@ import os
 class SystemTrayIcon(QSystemTrayIcon):
     def __init__(self, overlay_window, shortcut_manager = None, parent = None):
         # Set icon
-        icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'Whispr.ico')
+        base_dir = os.getcwd()
+        icon_path = os.path.join(base_dir, 'src', 'assets', 'Whispr.ico')
         icon = QIcon(icon_path)
         
         super().__init__(icon, parent)

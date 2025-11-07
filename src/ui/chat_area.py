@@ -11,7 +11,8 @@ class ChatArea(QScrollArea):
         super().__init__(parent)
         self.initUI()
         self._init_scroll_animation()
-        self.chat_history_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'chat_history.json')
+        base_dir = os.getcwd()
+        self.chat_history_path = os.path.join(base_dir, 'src', 'data', 'chat_history.json')
         self._streaming_bubble = None
         self._streaming_text = ""
         

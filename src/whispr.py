@@ -10,7 +10,8 @@ import json
 
 if __name__ == '__main__':
     # Clear chat history on program start
-    chat_history_path = os.path.join(os.path.dirname(__file__), 'data', 'chat_history.json')
+    base_dir = os.getcwd()
+    chat_history_path = os.path.join(base_dir, 'src', 'data', 'chat_history.json')
     with open(chat_history_path, 'w') as f:
         json.dump([], f)
     
