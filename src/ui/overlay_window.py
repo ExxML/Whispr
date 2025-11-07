@@ -22,10 +22,19 @@ class AIThread(QObject):
         self.message = message
         self.take_screenshot = take_screenshot
         self._thread = None
+        self._stop_flag = threading.Event() # Stop flag in case a new user message is sent while a bot message is being streamed
     
     def start(self):
         self._thread = threading.Thread(target = self.run, daemon = True)
         self._thread.start()
+    
+    def stop(self):
+        """Signal the thread to stop"""
+        self._stop_flag.set()
+    
+    def is_stopped(self):
+        """Check if stop has been requested"""
+        return self._stop_flag.is_set()
     
     def run(self):
         try:
@@ -33,14 +42,19 @@ class AIThread(QObject):
                 response = self.ai_manager.generate_content_with_screenshot(self.message, self._on_chunk)
             else:
                 response = self.ai_manager.generate_content(self.message, self._on_chunk)
-            self.finished.emit(response)
+            
+            # Only emit finished if we weren't stopped
+            if not self.is_stopped():
+                self.finished.emit(response)
         
         except Exception as e:
-            self.error.emit(str(e))
+            # Only emit error if we weren't stopped
+            if not self.is_stopped():
+                self.error.emit(str(e))
     
     def _on_chunk(self, text):
-        # Emit chunk text to UI thread
-        if text:
+        # Emit chunk text to UI thread only if not stopped
+        if text and not self.is_stopped():
             self.progress.emit(text)
 
 class Overlay(QWidget):
@@ -200,11 +214,23 @@ class Overlay(QWidget):
 
     def handle_message(self, message, take_screenshot = False):
         """Handle a user message"""
+        # If there's an active worker, stop it and disconnect signals
+        if self.worker is not None:
+            self.worker.stop()
+            try:
+                self.worker.progress.disconnect()
+                self.worker.finished.disconnect()
+                self.worker.error.disconnect()
+            except TypeError:
+                # Signals already disconnected
+                pass
+            
+            # Finalize the interrupted stream
+            if self.chat_area._streaming_bubble is not None:
+                self.chat_area.finalize_assistant_stream()
+        
         # Immediately add user's message to the chat area
         self.chat_area.add_message(message, is_user = True)
-        
-        # Disable input while generating response
-        self.input_bar.set_enabled(False)
         
         # Prepare streaming assistant bubble
         self.chat_area.start_assistant_stream()
@@ -222,7 +248,6 @@ class Overlay(QWidget):
         """Handle successful AI response"""
         # Finalize streaming bubble and re-enable input
         self.chat_area.finalize_assistant_stream()
-        self.input_bar.set_enabled(True)
         
     def on_response_error(self, error):
         """Handle AI response error"""
@@ -231,13 +256,16 @@ class Overlay(QWidget):
         if self.chat_area._streaming_bubble is not None:
             self.chat_area.finalize_assistant_stream()
         self.chat_area.add_message(error_msg, is_user = False)
-        self.input_bar.set_enabled(True)
 
     def on_response_chunk(self, chunk):
         """Stream chunk text into the current assistant bubble"""
         self.chat_area.append_to_stream(chunk)
 
     def quit_app(self):
+        # Stop any active worker
+        if self.worker is not None:
+            self.worker.stop()
+        
         self.chat_area.clear_chat()
         app = QApplication.instance()
         if app is not None:
