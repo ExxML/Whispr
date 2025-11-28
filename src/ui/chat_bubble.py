@@ -36,7 +36,7 @@ class ChatBubble(QWidget):
                     background-color: transparent;
                     border: 1px solid rgba(255, 255, 255, 1.0);
                     border-radius: 10px;
-                    padding: 6px 7px 3px 7px;  /* top, right, bottom, left */
+                    padding: 7px 7px 0px 7px;  /* top, right, bottom, left */
                 }
             """)
 
@@ -63,6 +63,7 @@ class ChatBubble(QWidget):
                 QLabel {
                     color: rgba(255, 255, 255, 1.0);
                     background-color: transparent;
+                    padding: 0px 0px -7px 0px;  /* top, right, bottom, left */
                 }
             """)
             self.message_label.setWordWrap(True)
@@ -73,6 +74,7 @@ class ChatBubble(QWidget):
         layout.setSpacing(0)
 
     def set_bot_message(self, message):
+        """Format the bot message and set the text as the label"""
         # Parse markdown formatting in the generated response
         self.message = message
         
