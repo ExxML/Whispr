@@ -198,6 +198,6 @@ class ShortcutManager(QObject):
     def generate_with_screenshot_fix(self):
         """Automatically generate content with screenshot for fixing/improving code"""
         self.generate_content_with_screenshot_signal.emit(
-            "Fix or improve the code based on the new instructions.", 
+            "Fix or improve the code based on the new instructions. Then, state the changes you made.", 
             True # Take a screenshot
         )
