@@ -17,7 +17,8 @@ class ChatBubble(QWidget):
         layout.setContentsMargins(10, 5, 10, 5)
         
         # Create message label with HTML formatting
-        html_message = f'<div style="line-height: 1.2;">{self.message}</div>'
+        # Default formatting for user message only (bot message uses formatting in set_bot_message)
+        html_message = f'<div style="line-height: 1.4; white-space: pre-wrap;">{self.message}</div>'
         self.message_label = QLabel(html_message)
         self.message_label.setTextFormat(Qt.TextFormat.RichText)
         self.message_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
@@ -71,12 +72,14 @@ class ChatBubble(QWidget):
         
         layout.setSpacing(0)
 
-    def set_message(self, message):
+    def set_bot_message(self, message):
         # Parse markdown formatting in the generated response
         self.message = message
         
-        # First replace Python code blocks with formatted HTML
-        formatted_message = self.message
+        # Escape HTML special characters in the entire message first
+        formatted_message = self.message.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        
+        # Replace Python code blocks with formatted HTML
         formatted_message = re.sub(
             r'```(.*?)```',
             self._format_code_block,
@@ -93,17 +96,24 @@ class ChatBubble(QWidget):
         
         # Replace **text** with <b>text</b>
         formatted_message = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', formatted_message)
-        # # Replace `inline code` with formatted HTML
-        # formatted_message = re.sub(
-        #     r'`([^`]+?)`', 
-        #     r'<code style="font-family: monospace; background-color: rgba(255,255,255,0.1); padding: 0.2em 0.4em; border-radius: 3px;">\1</code>', 
-        #     formatted_message
-        # )
+        
+        # Replace `inline code` with formatted HTML
+        def format_inline_code(match):
+            code = match.group(1)
+            return f'<code style="font-family: monospace; background-color: rgba(255, 255, 255, 0.1); padding: 0.2em 0.4em; border-radius: 3px;">{code}</code>'
+        
+        formatted_message = re.sub(r'`([^`\n]+)`', format_inline_code, formatted_message)
+
+        # Preserve leading spaces at the start of each line by converting them to &nbsp;
+        formatted_message = re.sub(
+            r'(?m)^( +)',
+            lambda m: '&nbsp;' * len(m.group(1)),
+            formatted_message,
+        )
         # Replace newlines with <br> tags (but not inside code blocks)
-        # formatted_message = formatted_message.replace('\n', '<br>')
         formatted_message = re.sub(r'(?<!</h[1-5]>)\n(?!<h[1-5]>)', '<br>', formatted_message)
         
-        html_message = f'<div style="line-height: 1.4;">{formatted_message}</div>'
+        html_message = f'<div style="line-height: 1.4; white-space: pre-wrap;">{formatted_message}</div>' # use pre-wrap to avoid trimming leading spaces on the line
         self.message_label.setText(html_message)
     
     def _format_code_block(self, match):
@@ -118,7 +128,7 @@ class ChatBubble(QWidget):
         # Create formatted code block with monospace font and dark background
         formatted_code = (
             '<div style="'
-            'background-color: rgba(0, 0, 0, 0.08); '
+            'background-color: rgba(0, 0, 0, 0.1); '
             'color: rgba(255, 255, 255, 1.0); '
             'font-family: JetBrains Mono; '
             'font-size: 11pt; '

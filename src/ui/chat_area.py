@@ -100,7 +100,7 @@ class ChatArea(QScrollArea):
         if self._streaming_bubble is None:
             return
         self._streaming_text += chunk_text
-        self._streaming_bubble.set_message(self._streaming_text)
+        self._streaming_bubble.set_bot_message(self._streaming_text)
         self.scroll_to_bottom()
     
     def finalize_assistant_stream(self):
