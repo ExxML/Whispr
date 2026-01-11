@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QScrollArea, QWidget, QVBoxLayout
-from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QAbstractAnimation
+from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QAbstractAnimation, QTimer
 from .chat_bubble import ChatBubble
 import os
 import json
@@ -27,7 +27,6 @@ class ChatArea(QScrollArea):
         self.chat_container.setStyleSheet('background-color: transparent;')
         self.chat_layout = QVBoxLayout(self.chat_container)
         self.chat_layout.setContentsMargins(3, 3, 3, 3)
-        self.chat_layout.setSpacing(0)
         self.chat_layout.addStretch()
         
         # Set the container as the scroll area's widget
@@ -65,7 +64,7 @@ class ChatArea(QScrollArea):
         self._scroll_anim = QPropertyAnimation(self.verticalScrollBar(), b"value", self)
         self._scroll_anim.setEasingCurve(QEasingCurve.Type.OutQuad)
     
-    def add_message(self, message, is_user = False):
+    def add_user_message(self, message, is_user = False):
         """Add a new message to the chat area"""
         # Remove the stretch before adding new message
         self.chat_layout.takeAt(self.chat_layout.count() - 1)
@@ -80,8 +79,8 @@ class ChatArea(QScrollArea):
         # Save the message to chat history
         self.save_message(message, is_user)
         
-        # Scroll to bottom with smooth animation
-        self.scroll_to_bottom()
+        # Force scroll to bottom with smooth animation after 1 second delay
+        QTimer.singleShot(300, lambda: self._animate_to(self.verticalScrollBar().maximum() - 10, 100))
     
     def start_assistant_stream(self):
         """Create an assistant bubble to stream content into (not saved until finalized)."""
@@ -93,7 +92,6 @@ class ChatArea(QScrollArea):
         self._streaming_text = ""
         self.chat_layout.addWidget(self._streaming_bubble)
         self.chat_layout.addStretch()
-        self.scroll_to_bottom()
     
     def append_to_stream(self, chunk_text):
         """Append text to the current streaming assistant bubble."""
@@ -101,7 +99,6 @@ class ChatArea(QScrollArea):
             return
         self._streaming_text += chunk_text
         self._streaming_bubble.set_bot_message(self._streaming_text)
-        self.scroll_to_bottom()
     
     def finalize_assistant_stream(self):
         """Persist the streamed assistant message and clear streaming state."""
@@ -112,7 +109,6 @@ class ChatArea(QScrollArea):
         # Clear streaming state
         self._streaming_bubble = None
         self._streaming_text = ""
-        self.scroll_to_bottom()
         
     def save_message(self, message, is_user):
         """Save a message to chat_history.json"""
@@ -129,19 +125,6 @@ class ChatArea(QScrollArea):
 
         with open(self.chat_history_path, 'w') as f:
             json.dump(history, f, indent = 2)
-    
-    def is_scrolled_to_bottom(self):
-        """Check if the scrollbar is at the bottom within a threshold"""
-        # Arbitrary threshold so it won't scroll to bottom if the user has scrolled up mid-streaming message
-        threshold = 350
-        scrollbar = self.verticalScrollBar()
-        return scrollbar.value() >= scrollbar.maximum() - threshold
-    
-    def scroll_to_bottom(self):
-        """Smoothly scroll to the bottom of the chat area if at bottom or forced"""
-        if self.is_scrolled_to_bottom():
-            scrollbar = self.verticalScrollBar()
-            self._animate_to(scrollbar.maximum(), 100)
     
     def clear_chat(self):
         """Clear all messages from the chat area"""

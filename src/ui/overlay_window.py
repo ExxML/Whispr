@@ -242,8 +242,6 @@ class Overlay(QWidget):
         self.worker.error.connect(self.on_response_error)
         self.worker.start()
 
-        self.chat_area.scroll_to_bottom()
-
     def on_response_ready(self):
         """Handle successful AI response"""
         # Finalize streaming bubble and re-enable input

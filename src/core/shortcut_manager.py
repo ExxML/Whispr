@@ -184,14 +184,14 @@ class ShortcutManager(QObject):
     def generate_with_screenshot(self):
         """Automatically generate content with screenshot"""
         self.generate_content_with_screenshot_signal.emit(
-            """Help me solve this programming problem. Be concise.
-            1. Give me 5 clarification questions to ask about the problem.
-            2. State the type of problem (ex. Arrays & Hashing, Two Pointers, Sliding Window, Stack, Binary Search, Linked List, Trees, Heap / Priority Queue, Backtracking, Tries, Graphs, Advanced Graphs, 1-D Dynamic Programming, 2-D Dynamic Programming, Greedy, Intervals, Math & Geometry, and/or Bit Manipulation), data structure(s), what each element in the data structure means, and algorithm(s) used to solve this problem.
-            3. Give me a high-level, point-form plan to approach and solve this problem (including edge cases).
-            4. Give me a short example walkthrough using your solution.
-            5. Give me a code block with the solution in Python, supplied with comments.
-            6. Give me a concise explanation of the solution.
-            7. Give me the time and space complexity for the solution.""", 
+"""Help me solve this programming problem. Be concise.
+1. Give me 5 clarification questions to ask about the problem.
+2. State the type of problem (ex. Arrays & Hashing, Two Pointers, Sliding Window, Stack, Binary Search, Linked List, Trees, Heap / Priority Queue, Backtracking, Tries, Graphs, Advanced Graphs, 1-D Dynamic Programming, 2-D Dynamic Programming, Greedy, Intervals, Math & Geometry, and/or Bit Manipulation), data structure(s), what each element in the data structure means, and algorithm(s) used to solve this problem.
+3. Give me a high-level, point-form plan to approach and solve this problem (including edge cases).
+4. Give me a short example walkthrough using your solution.
+5. Give me a code block with the solution in Python, supplied with comments.
+6. Give me a concise explanation of the solution.
+7. Give me the time and space complexity for the solution.""", 
             True # Take a screenshot
         )
         
