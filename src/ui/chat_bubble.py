@@ -44,7 +44,7 @@ class ChatBubble(QWidget):
             fm = QFontMetrics(font)
             text_width = fm.horizontalAdvance(self.message) + 8 # additional offset for right spacing
             max_width = 400
-            total_text_width = text_width + 14 # 7px left + 7px right padding
+            total_text_width = text_width + 14 # accounting for 7px left + 7px right padding
             # Set max width if text length exceeds max width
             if total_text_width > max_width:
                 if total_text_width > max_width + 5:

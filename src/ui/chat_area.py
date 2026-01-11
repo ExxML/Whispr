@@ -64,7 +64,7 @@ class ChatArea(QScrollArea):
         self._scroll_anim = QPropertyAnimation(self.verticalScrollBar(), b"value", self)
         self._scroll_anim.setEasingCurve(QEasingCurve.Type.OutQuad)
     
-    def add_user_message(self, message, is_user = False):
+    def add_message(self, message, is_user):
         """Add a new message to the chat area"""
         # Remove the stretch before adding new message
         self.chat_layout.takeAt(self.chat_layout.count() - 1)
@@ -79,8 +79,9 @@ class ChatArea(QScrollArea):
         # Save the message to chat history
         self.save_message(message, is_user)
         
-        # Force scroll to bottom with smooth animation after 1 second delay
-        QTimer.singleShot(300, lambda: self._animate_to(self.verticalScrollBar().maximum() - 10, 100))
+        # Force scroll to bottom after a delay
+        if is_user:
+            QTimer.singleShot(400, lambda: self._animate_to(self.verticalScrollBar().maximum() - 10, 100))
     
     def start_assistant_stream(self):
         """Create an assistant bubble to stream content into (not saved until finalized)."""

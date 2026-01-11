@@ -230,10 +230,7 @@ class Overlay(QWidget):
                 self.chat_area.finalize_assistant_stream()
         
         # Immediately add user's message to the chat area
-        self.chat_area.add_user_message(message, is_user = True)
-        
-        # Prepare streaming assistant bubble
-        self.chat_area.start_assistant_stream()
+        self.chat_area.add_message(message, is_user = True)
         
         # Create and start worker thread
         self.worker = AIThread(self.ai_manager, message, take_screenshot)
@@ -253,10 +250,13 @@ class Overlay(QWidget):
         # Finalize any in-progress stream, then add error as a separate message
         if self.chat_area._streaming_bubble is not None:
             self.chat_area.finalize_assistant_stream()
-        self.chat_area.add_user_message(error_msg, is_user = False)
+        self.chat_area.add_message(error_msg, is_user = False)
 
     def on_response_chunk(self, chunk):
         """Stream chunk text into the current assistant bubble"""
+        # Lazily create the assistant bubble only when first chunk arrives
+        if self.chat_area._streaming_bubble is None:
+            self.chat_area.start_assistant_stream()
         self.chat_area.append_to_stream(chunk)
 
     def quit_app(self):
