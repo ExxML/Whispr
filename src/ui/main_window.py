@@ -102,10 +102,10 @@ class MainWindow(QWidget):
         main_layout.addLayout(header_layout)
 
         # Add chat area
-        main_layout.addWidget(self.chat_area, stretch = 1)
+        main_layout.addWidget(self.chat_area, stretch=1)
 
         # Add input bar
-        self.input_bar.message_sent.connect(lambda msg: self.worker.handle_message(msg, take_screenshot = False))
+        self.input_bar.message_sent.connect(lambda msg: self.worker.handle_message(msg, take_screenshot=False))
         main_layout.addWidget(self.input_bar)
 
         # Unset cursor for all child widgets to preserve system cursor

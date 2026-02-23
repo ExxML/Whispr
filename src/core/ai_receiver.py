@@ -26,7 +26,7 @@ class AIReceiver(QObject):
         self.finished.connect(self.on_response_ready)
         self.error.connect(self.on_response_error)
 
-    def handle_message(self, message, take_screenshot = False):
+    def handle_message(self, message, take_screenshot=False):
         """Handle a user message by displaying it and starting AI generation.
 
         Args:
@@ -47,10 +47,10 @@ class AIReceiver(QObject):
         self._take_screenshot = take_screenshot
 
         # Immediately add user's message to the chat area
-        self.chat_area.add_message(message, is_user = True)
+        self.chat_area.add_message(message, is_user=True)
 
         # Start new thread
-        self._thread = threading.Thread(target = self.run, daemon = True)
+        self._thread = threading.Thread(target=self.run, daemon=True)
         self._thread.start()
 
     def stop(self):
@@ -107,7 +107,7 @@ class AIReceiver(QObject):
         # Finalize any in-progress stream, then add error as a separate message
         if self.chat_area._streaming_bubble is not None:
             self.chat_area.finalize_assistant_stream()
-        self.chat_area.add_message(error_msg, is_user = False)
+        self.chat_area.add_message(error_msg, is_user=False)
 
     def on_response_chunk(self, chunk):
         """Stream chunk text into the current assistant bubble.

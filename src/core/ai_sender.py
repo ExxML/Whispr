@@ -15,11 +15,11 @@ class AISender():
         load_dotenv(base_dir / '.env')
         
         # Initialize Gemini client
-        self.client = genai.Client(api_key = os.getenv('GEMINI_API_KEY'))
+        self.client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
         
         self.screenshot_manager = screenshot_manager
 
-    def generate_content(self, user_input, on_chunk = None):
+    def generate_content(self, user_input, on_chunk=None):
         """Generate AI content by streaming from the Gemini model.
 
         Args:
@@ -32,17 +32,17 @@ class AISender():
         full_response = ""
         # Stream generation
         for chunk in self.client.models.generate_content_stream(
-            model = "gemini-2.5-flash",
-            contents = [
+            model="gemini-2.5-flash",
+            contents=[
                 user_input
             ],
-            config = types.GenerateContentConfig(
-                thinking_config = types.ThinkingConfig(thinking_budget = 0)  # Disables thinking
+            config=types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(thinking_budget=0)  # Disables thinking
             ),
         ):
             if chunk.text:
                 full_response += chunk.text
-                print(chunk.text, end = "", flush = True)
+                print(chunk.text, end="", flush=True)
                 if on_chunk is not None:
                     try:
                         on_chunk(chunk.text)
@@ -51,7 +51,7 @@ class AISender():
 
         return full_response
 
-    def generate_content_with_screenshot(self, user_input, on_chunk = None):
+    def generate_content_with_screenshot(self, user_input, on_chunk=None):
         """Generate AI content with a screenshot of the primary screen.
 
         Args:
@@ -73,21 +73,21 @@ class AISender():
         full_response = ""
         # Stream generation
         for chunk in self.client.models.generate_content_stream(
-            model = "gemini-2.5-flash",
-            contents = [
+            model="gemini-2.5-flash",
+            contents=[
                 types.Part.from_bytes(
-                    data = image_bytes,
-                    mime_type = "image/png"
+                    data=image_bytes,
+                    mime_type="image/png"
                 ),
                 user_input
             ],
-            config = types.GenerateContentConfig(
-                thinking_config = types.ThinkingConfig(thinking_budget = 0)  # Disables thinking
+            config=types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(thinking_budget=0)  # Disables thinking
             ),
         ):
             if chunk.text:
                 full_response += chunk.text
-                print(chunk.text, end = "", flush = True)
+                print(chunk.text, end="", flush=True)
                 if on_chunk is not None:
                     try:
                         on_chunk(chunk.text)

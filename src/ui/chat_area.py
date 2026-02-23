@@ -10,7 +10,7 @@ from .chat_bubble import ChatBubble
 class ChatArea(QScrollArea):
     """Scrollable chat area for displaying message history"""
     
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.initUI()
         self._init_scroll_animation()
@@ -98,7 +98,7 @@ class ChatArea(QScrollArea):
             return
         # Remove stretch, add empty assistant bubble, then add stretch back
         self.chat_layout.takeAt(self.chat_layout.count() - 1)
-        self._streaming_bubble = ChatBubble("", is_user = False)
+        self._streaming_bubble = ChatBubble("", is_user=False)
         self._streaming_text = ""
         self.chat_layout.addWidget(self._streaming_bubble)
         self.chat_layout.addStretch()
@@ -119,7 +119,7 @@ class ChatArea(QScrollArea):
         if self._streaming_bubble is None:
             return
         # Save final message
-        self.save_message(self._streaming_text, is_user = False)
+        self.save_message(self._streaming_text, is_user=False)
         # Clear streaming state
         self._streaming_bubble = None
         self._streaming_text = ""
@@ -143,7 +143,7 @@ class ChatArea(QScrollArea):
         })
 
         with open(self.chat_history_path, 'w') as f:
-            json.dump(history, f, indent = 2)
+            json.dump(history, f, indent=2)
     
     def clear_chat(self):
         """Clear all messages from the chat area"""
