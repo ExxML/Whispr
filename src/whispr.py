@@ -4,7 +4,7 @@ import sys
 
 from PyQt6.QtWidgets import QApplication
 
-from core.ai_manager import AIManager
+from core.ai_sender import AISender
 from core.screenshot_manager import ScreenshotManager
 from core.shortcut_manager import ShortcutManager
 from ui.main_window import MainWindow
@@ -19,8 +19,8 @@ if __name__ == '__main__':
     
     app = QApplication(sys.argv)
     screenshot_manager = ScreenshotManager()
-    ai_manager = AIManager(screenshot_manager)
-    main_window = MainWindow(ai_manager)
+    ai_sender = AISender(screenshot_manager)
+    main_window = MainWindow(ai_sender)
     shortcut_manager = ShortcutManager(main_window, screenshot_manager)
     tray_icon = SystemTray(main_window, shortcut_manager)
     

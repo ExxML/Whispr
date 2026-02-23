@@ -59,7 +59,7 @@ class ShortcutManager(QObject):
         self.clear_chat_signal.connect(self.main_window.chat_area.clear_chat)
         self.minimize_signal.connect(self.main_window.hide)
         self.toggle_signal.connect(self.main_window.toggle_window_visibility)
-        self.generate_content_with_screenshot_signal.connect(self.main_window.handle_message)
+        self.generate_content_with_screenshot_signal.connect(self.main_window.worker.handle_message)
 
         # Initialize animation
         self.animation_timer = QTimer()
