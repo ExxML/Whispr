@@ -10,7 +10,10 @@ from .clear_chat_button import ClearChatButton
 from .input_bar import InputBar
 from core.ai_receiver import AIReceiver
 
+
 class MainWindow(QWidget):
+    """Main application window containing the chat area, input bar, and title bar buttons."""
+
     def __init__(self, ai_sender):
         super().__init__()
         self.initUI()
@@ -205,12 +208,8 @@ class MainWindow(QWidget):
         super().mousePressEvent(event)
 
     # Override paintEvent to draw app window
-    def paintEvent(self, event):
-        """Paint the main window with rounded corners and a border.
-
-        Args:
-            event (QPaintEvent): The paint event.
-        """
+    def paintEvent(self, _event):
+        """Paint the main window with rounded corners and a border."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         rect = self.rect()

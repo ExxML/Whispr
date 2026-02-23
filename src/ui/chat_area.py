@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
 
 from .chat_bubble import ChatBubble
 
+
 class ChatArea(QScrollArea):
     """Scrollable chat area for displaying message history"""
     

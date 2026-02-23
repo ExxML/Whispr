@@ -10,6 +10,7 @@ from core.shortcut_manager import ShortcutManager
 from ui.main_window import MainWindow
 from ui.system_tray import SystemTray
 
+
 if __name__ == '__main__':
     # Clear chat history on program start
     base_dir = os.getcwd()

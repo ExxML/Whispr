@@ -1,6 +1,7 @@
 import re
 
-class AIFormatter:
+
+class AIFormatter():
     """Formats raw AI/bot message text into HTML for display in the chat UI."""
 
     def format_message(message):

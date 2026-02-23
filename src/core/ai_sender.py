@@ -5,7 +5,10 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-class AISender:
+
+class AISender():
+    """Handles sending user input to Gemini."""
+
     def __init__(self, screenshot_manager):
         # Load environment variables from the .env file
         base_dir = Path(__file__).resolve().parent.parent.parent

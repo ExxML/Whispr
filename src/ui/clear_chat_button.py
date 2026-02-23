@@ -4,7 +4,10 @@ from PyQt6.QtCore import QSize
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QPushButton
 
+
 class ClearChatButton(QPushButton):
+    """Button in the title bar to clear the chat history."""
+
     def __init__(self, parent, on_click, chat_area):
         super().__init__("", parent)
         self.chat_area = chat_area

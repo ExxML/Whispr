@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 from ui.ai_formatter import AIFormatter
 
+
 class ChatBubble(QWidget):
     """A chat bubble widget for displaying messages"""
     

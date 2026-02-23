@@ -2,8 +2,10 @@ import threading
 
 from PyQt6.QtCore import QObject, pyqtSignal
 
+
 class AIReceiver(QObject):
-    """Manages AI response streaming and chat area updates."""
+    """Handles AI response streaming and chat area updates."""
+
     # Signals for cross-thread communication
     # Using threading instead of QThread due to compilation issues with Nuitka
     finished = pyqtSignal(str)

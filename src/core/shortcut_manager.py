@@ -28,13 +28,15 @@ from core.win32_hook import (
     user32,
 )
 
+
 class ShortcutManager(QObject):
-    """
-    Manages global keyboard shortcuts via a Win32 low-level keyboard hook.
+    """Manages global keyboard shortcuts via a Win32 low-level keyboard hook.
+    
     All registered hotkeys are suppressed so other applications never see the
-    key events.  Conditional hotkeys (everything except the visibility toggle)
+    key events. Conditional hotkeys (everything except the visibility toggle)
     are only active while the main window is visible.
     """
+
     # Qt signals for thread-safe communication with the main thread
     # ALL UI actions must be performed on the main thread to avoid crashes and unpredictable behaviour (ex. leaking hotkeys)
     move_signal = pyqtSignal(int, int)
@@ -86,8 +88,7 @@ class ShortcutManager(QObject):
     # Hotkey Definitions
 
     def _define_hotkeys(self):
-        """
-        Populate the hotkey lookup tables.
+        """Populate the hotkey lookup tables.
 
         Default Shortcuts:
             Ctrl + E - Show / hide main window (always active)
@@ -178,8 +179,7 @@ class ShortcutManager(QObject):
         return user32.CallNextHookEx(self._hook_handle, nCode, wParam, lParam)
 
     def _hook_thread_entry(self):
-        """
-        Entry point for the keyboard hook thread.
+        """Entry point for the keyboard hook thread.
 
         Installs the low-level keyboard hook, then enters a message loop that
         keeps the hook alive until a WM_QUIT message is posted.
