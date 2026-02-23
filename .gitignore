@@ -1,6 +1,14 @@
+# Misc
 TODO.md
+WIP.md
+
+# Python
 __pycache__/
 .env
+
+# Cache files
 src/data/cache/
+
+# Nuitka build files
 whispr.build/
 whispr.dist/
