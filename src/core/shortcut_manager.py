@@ -88,6 +88,7 @@ class ShortcutManager(QObject):
         """
         self._always_active_hotkeys = {
             (MOD_CTRL, ord('E')): (self.toggle_overlay, False),
+            (MOD_CTRL | MOD_SHIFT, ord('Q')): (self.close_app, False),
         }
 
         self._overlay_hotkeys = {
@@ -97,7 +98,6 @@ class ShortcutManager(QObject):
             (MOD_CTRL | MOD_ALT, VK_DOWN): (self.move_window_down, True),
             (MOD_CTRL | MOD_SHIFT, VK_UP): (self.scroll_up, True),
             (MOD_CTRL | MOD_SHIFT, VK_DOWN): (self.scroll_down, True),
-            (MOD_CTRL | MOD_SHIFT, ord('Q')): (self.close_app, False),
             (MOD_CTRL | MOD_SHIFT, ord('C')): (self.screenshot, False),
             (MOD_CTRL, ord('Q')): (self.minimize, False),
             (MOD_CTRL, ord('N')): (self.clear_chat, False),
