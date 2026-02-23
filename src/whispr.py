@@ -1,8 +1,9 @@
+from PyQt6.QtWidgets import QApplication
 from ui.overlay_window import Overlay
 from core.ai_manager import AIManager
+from ui.system_tray_icon import SystemTrayIcon
 from core.shortcut_manager import ShortcutManager
 from core.screenshot_manager import ScreenshotManager
-from PyQt6.QtWidgets import QApplication
 import os
 import sys
 import json
@@ -19,5 +20,6 @@ if __name__ == '__main__':
     ai_manager = AIManager(screenshot_manager)
     overlay = Overlay(ai_manager)
     shortcut_manager = ShortcutManager(overlay, screenshot_manager)
+    tray_icon = SystemTrayIcon(overlay, shortcut_manager)
     
     sys.exit(app.exec())
