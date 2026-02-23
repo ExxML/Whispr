@@ -1,8 +1,8 @@
-import re
-
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QFontMetrics
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
+
+from ui.ai_formatter import AIFormatter
 
 class ChatBubble(QWidget):
     """A chat bubble widget for displaying messages"""
@@ -80,89 +80,5 @@ class ChatBubble(QWidget):
         Args:
             message (str): The raw bot message text to format and display.
         """
-        # Parse markdown formatting in the generated response
         self.message = message
-        
-        # Escape HTML special characters in the entire message first
-        formatted_message = self.message.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-        
-        # Replace Python code blocks with formatted HTML
-        formatted_message = re.sub(
-            r'```(.*?)```',
-            self._format_code_block,
-            formatted_message,
-            flags = re.DOTALL
-        )
-        
-        # Format headers
-        formatted_message = re.sub(r'^#####\s+(.+?)(<br>|$)', r'<h5>\1</h5>', formatted_message, flags = re.MULTILINE)
-        formatted_message = re.sub(r'^####\s+(.+?)(<br>|$)', r'<h4>\1</h4>', formatted_message, flags = re.MULTILINE)
-        formatted_message = re.sub(r'^###\s+(.+?)(<br>|$)', r'<h3>\1</h3>', formatted_message, flags = re.MULTILINE)
-        formatted_message = re.sub(r'^##\s+(.+?)(<br>|$)', r'<h2>\1</h2>', formatted_message, flags = re.MULTILINE)
-        formatted_message = re.sub(r'^#\s+(.+?)(<br>|$)', r'<h1>\1</h1>', formatted_message, flags = re.MULTILINE)
-        
-        # Replace **text** with <b>text</b>
-        formatted_message = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', formatted_message)
-        
-        # Replace `inline code` with formatted HTML
-        def format_inline_code(match):
-            """Format an inline code match with monospace styling.
-
-            Args:
-                match (re.Match): Regex match object containing the inline code.
-
-            Returns:
-                str: HTML-formatted inline code string.
-            """
-            code = match.group(1)
-            return f'<code style="font-family: monospace; background-color: rgba(255, 255, 255, 0.1); padding: 0.2em 0.4em; border-radius: 3px;">{code}</code>'
-        
-        formatted_message = re.sub(r'`([^`\n]+)`', format_inline_code, formatted_message)
-
-        # Preserve leading spaces at the start of each line by converting them to &nbsp;
-        formatted_message = re.sub(
-            r'(?m)^( +)',
-            lambda m: '&nbsp;' * len(m.group(1)),
-            formatted_message,
-        )
-        # Replace newlines with <br> tags (but not inside code blocks)
-        formatted_message = re.sub(r'(?<!</h[1-5]>)\n(?!<h[1-5]>)', '<br>', formatted_message)
-        
-        html_message = f'<div style="line-height: 1.4; white-space: pre-wrap;">{formatted_message}</div>' # use pre-wrap to avoid trimming leading spaces on the line
-        self.message_label.setText(html_message)
-    
-    def _format_code_block(self, match):
-        """Format a code block with syntax highlighting and styling.
-
-        Args:
-            match (re.Match): Regex match object containing the code block content.
-
-        Returns:
-            str: HTML-formatted code block string.
-        """
-        code = match.group(1)
-        # Replace HTML special characters
-        code = code.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-        
-        # Color comments in dark green (can be anywhere in the line)
-        code = re.sub(r'(#.*?)(?=\n|$)', r'<span style="color: #749852;">\1</span>', code, flags = re.MULTILINE)
-        
-        # Create formatted code block with monospace font and dark background
-        formatted_code = (
-            '<div style="'
-            'background-color: rgba(0, 0, 0, 0.1); '
-            'color: rgba(255, 255, 255, 1.0); '
-            'font-family: JetBrains Mono; '
-            'font-size: 11pt; '
-            'white-space: pre-wrap; '
-            'word-wrap: break-word; '
-            'word-break: break-word; '
-            'tab-size: 4; '
-            '-moz-tab-size: 4; '
-            'text-align: left;' 
-            '">'
-            f'<span style="white-space: pre-wrap;">{code}</span>'
-            '</div>'
-        )
-        
-        return formatted_code
+        self.message_label.setText(AIFormatter.format_message(message))
