@@ -1,6 +1,7 @@
-from PyQt6.QtGui import QAction, QIcon
-from PyQt6.QtWidgets import QSystemTrayIcon, QMenu
 import os
+
+from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtWidgets import QMenu, QSystemTrayIcon
 
 class SystemTray(QSystemTrayIcon):
     def __init__(self, overlay_window, shortcut_manager = None, parent = None):
@@ -31,9 +32,15 @@ class SystemTray(QSystemTrayIcon):
         self.show()
     
     def on_tray_activated(self, reason):
+        """Handle system tray icon activation events.
+
+        Args:
+            reason (QSystemTrayIcon.ActivationReason): The reason the tray icon was activated.
+        """
         # Show/Hide on left click
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             self.overlay_window.toggle_window_visibility()
     
     def quit_app(self):
+        """Quit the application via the overlay window."""
         self.overlay_window.quit_app()

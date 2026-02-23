@@ -1,7 +1,8 @@
-from PyQt6.QtGui import QIcon
-from PyQt6.QtCore import QSize
-from PyQt6.QtWidgets import QPushButton
 import os
+
+from PyQt6.QtCore import QSize
+from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QPushButton
 
 class ClearChatButton(QPushButton):
     def __init__(self, parent, on_click, chat_area):
@@ -29,10 +30,20 @@ class ClearChatButton(QPushButton):
 
     # Override to change icon on hover
     def enterEvent(self, event):
+        """Change the button icon to the dark variant on mouse hover.
+
+        Args:
+            event (QEnterEvent): The mouse enter event.
+        """
         self.setIcon(QIcon(self.dark_icon_path))
         super().enterEvent(event)
 
     # Override to change icon when not on hover
     def leaveEvent(self, event):
+        """Restore the button icon to the light variant when mouse leaves.
+
+        Args:
+            event (QEvent): The mouse leave event.
+        """
         self.setIcon(QIcon(self.light_icon_path))
         super().leaveEvent(event)

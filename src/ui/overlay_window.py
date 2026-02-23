@@ -1,12 +1,14 @@
-from PyQt6.QtGui import QPainter, QColor, QPen
-from PyQt6.QtCore import Qt, QTimer, QPoint, QObject, pyqtSignal
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
-from .input_bar import InputBar
+import ctypes
+from ctypes import wintypes
+import threading
+
+from PyQt6.QtCore import QObject, QPoint, Qt, QTimer, pyqtSignal
+from PyQt6.QtGui import QColor, QPainter, QPen
+from PyQt6.QtWidgets import QApplication, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+
 from .chat_area import ChatArea
 from .clear_chat_button import ClearChatButton
-from ctypes import wintypes
-import ctypes
-import threading
+from .input_bar import InputBar
 
 class AIThread(QObject):
     """Separate thread for AI response streaming"""
@@ -25,6 +27,7 @@ class AIThread(QObject):
         self._stop_flag = threading.Event() # Stop flag in case a new user message is sent while a bot message is being streamed
     
     def start(self):
+        """Start the AI generation thread."""
         self._thread = threading.Thread(target = self.run, daemon = True)
         self._thread.start()
     
@@ -33,10 +36,15 @@ class AIThread(QObject):
         self._stop_flag.set()
     
     def is_stopped(self):
-        """Check if stop has been requested"""
+        """Check if stop has been requested.
+
+        Returns:
+            bool: True if the thread has been signaled to stop.
+        """
         return self._stop_flag.is_set()
     
     def run(self):
+        """Execute AI content generation and emit progress and completion signals."""
         try:
             if self.take_screenshot:
                 response = self.ai_manager.generate_content_with_screenshot(self.message, self._on_chunk)
@@ -53,6 +61,11 @@ class AIThread(QObject):
                 self.error.emit(str(e))
     
     def _on_chunk(self, text):
+        """Handle a streamed text chunk by emitting it to the UI thread.
+
+        Args:
+            text (str): The text chunk received from the AI stream.
+        """
         # Emit chunk text to UI thread only if not stopped
         if text and not self.is_stopped():
             self.progress.emit(text)
@@ -65,6 +78,7 @@ class Overlay(QWidget):
         self.worker = None
         
     def initUI(self):
+        """Initialize the overlay window UI layout and components."""
         # Config variables
         self.window_width = 550
         self.window_height = 600
@@ -172,7 +186,11 @@ class Overlay(QWidget):
 
     # Set cursor as default texture regardless of where it is hovering on the overlay
     def _unset_cursor_recursive(self, widget):
-        """Recursively unset cursor for widget and all its children"""
+        """Recursively unset cursor for a widget and all its children.
+
+        Args:
+            widget (QWidget): The widget to unset the cursor for.
+        """
         widget.setAttribute(Qt.WidgetAttribute.WA_SetCursor, False)
         widget.unsetCursor()
         for child in widget.findChildren(QWidget):
@@ -180,13 +198,19 @@ class Overlay(QWidget):
             child.unsetCursor()
 
     def ensure_window_visible(self):
+        """Raise the overlay window if it is no longer the topmost window."""
         try:
             if not self._is_topmost_window():
                 self.raise_()
         except Exception:
             pass
 
-    def _is_topmost_window(self) -> bool:
+    def _is_topmost_window(self):
+        """Check if the overlay window is the topmost window at its corner positions.
+
+        Returns:
+            bool: True if the overlay is topmost at all sampled points.
+        """
         try:
             screen = QApplication.primaryScreen()
             rect = self.frameGeometry()
@@ -213,6 +237,7 @@ class Overlay(QWidget):
             return True
 
     def toggle_window_visibility(self):
+        """Toggle the overlay window between visible and hidden states."""
         if self.isVisible():
             self.hide()
         else:
@@ -220,7 +245,12 @@ class Overlay(QWidget):
             self.raise_()  # Bring to front
 
     def handle_message(self, message, take_screenshot = False):
-        """Handle a user message"""
+        """Handle a user message by displaying it and starting AI generation.
+
+        Args:
+            message (str): The user's message text.
+            take_screenshot (bool): Whether to include a screenshot with the request.
+        """
         # If there's an active worker, stop it and disconnect signals
         if self.worker is not None:
             self.worker.stop()
@@ -252,7 +282,11 @@ class Overlay(QWidget):
         self.chat_area.finalize_assistant_stream()
         
     def on_response_error(self, error):
-        """Handle AI response error"""
+        """Handle AI response error.
+
+        Args:
+            error (str): The error message from the AI response.
+        """
         error_msg = f"Error generating response: {error}"
         # Finalize any in-progress stream, then add error as a separate message
         if self.chat_area._streaming_bubble is not None:
@@ -260,13 +294,18 @@ class Overlay(QWidget):
         self.chat_area.add_message(error_msg, is_user = False)
 
     def on_response_chunk(self, chunk):
-        """Stream chunk text into the current assistant bubble"""
+        """Stream chunk text into the current assistant bubble.
+
+        Args:
+            chunk (str): Text chunk from the AI response stream.
+        """
         # Lazily create the assistant bubble only when first chunk arrives
         if self.chat_area._streaming_bubble is None:
             self.chat_area.start_assistant_stream()
         self.chat_area.append_to_stream(chunk)
 
     def quit_app(self):
+        """Quit the application, stopping any active worker and clearing chat."""
         # Stop any active worker
         if self.worker is not None:
             self.worker.stop()
@@ -278,11 +317,21 @@ class Overlay(QWidget):
 
     # Override mousePressEvent to automatically set focus to input field
     def mousePressEvent(self, event):
+        """Handle mouse press events by setting focus to the input field.
+
+        Args:
+            event (QMouseEvent): The mouse press event.
+        """
         self.input_bar.input_field.setFocus()
         super().mousePressEvent(event)
 
     # Override paintEvent to draw app window
     def paintEvent(self, event):
+        """Paint the overlay window with rounded corners and a border.
+
+        Args:
+            event (QPaintEvent): The paint event.
+        """
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         rect = self.rect()

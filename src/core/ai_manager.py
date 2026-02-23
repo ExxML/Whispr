@@ -1,8 +1,9 @@
 import os
 from pathlib import Path
+
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from dotenv import load_dotenv
 
 class AIManager:
     def __init__(self, screenshot_manager):
@@ -16,6 +17,15 @@ class AIManager:
         self.screenshot_manager = screenshot_manager
 
     def generate_content(self, user_input, on_chunk = None):
+        """Generate AI content by streaming from the Gemini model.
+
+        Args:
+            user_input (str): The user's input text to send to the model.
+            on_chunk (callable, optional): Callback invoked with each text chunk as it streams.
+
+        Returns:
+            str: The full generated response text.
+        """
         full_response = ""
         # Stream generation
         for chunk in self.client.models.generate_content_stream(
@@ -39,6 +49,15 @@ class AIManager:
         return full_response
 
     def generate_content_with_screenshot(self, user_input, on_chunk = None):
+        """Generate AI content with a screenshot of the primary screen.
+
+        Args:
+            user_input (str): The user's input text to send to the model.
+            on_chunk (callable, optional): Callback invoked with each text chunk as it streams.
+
+        Returns:
+            str: The full generated response text.
+        """
         # Take screenshot
         self.screenshot_manager.take_screenshot()
 

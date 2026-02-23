@@ -69,8 +69,12 @@ kernel32.GetModuleHandleW.argtypes = [ctypes.wintypes.LPCWSTR]
 kernel32.GetModuleHandleW.restype = ctypes.wintypes.HMODULE
 
 
-def get_active_modifiers() -> int:
-    """Return a bitmask representing the currently held modifier keys."""
+def get_active_modifiers():
+    """Return a bitmask representing the currently held modifier keys.
+
+    Returns:
+        int: Bitmask of active modifier keys (MOD_CTRL, MOD_ALT, MOD_SHIFT).
+    """
     mods = 0
     if user32.GetAsyncKeyState(VK_CONTROL) & 0x8000:
         mods |= MOD_CTRL

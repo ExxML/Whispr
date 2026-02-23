@@ -1,8 +1,10 @@
-from PyQt6.QtWidgets import QScrollArea, QWidget, QVBoxLayout
-from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QAbstractAnimation, QTimer
-from .chat_bubble import ChatBubble
-import os
 import json
+import os
+
+from PyQt6.QtCore import QAbstractAnimation, QEasingCurve, QPropertyAnimation, Qt, QTimer
+from PyQt6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
+
+from .chat_bubble import ChatBubble
 
 class ChatArea(QScrollArea):
     """Scrollable chat area for displaying message history"""
@@ -17,6 +19,7 @@ class ChatArea(QScrollArea):
         self._streaming_text = ""
         
     def initUI(self):
+        """Initialize the chat area UI layout, scroll settings, and styling."""
         # Configure scroll area
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -65,7 +68,12 @@ class ChatArea(QScrollArea):
         self._scroll_anim.setEasingCurve(QEasingCurve.Type.OutQuad)
     
     def add_message(self, message, is_user):
-        """Add a new message to the chat area"""
+        """Add a new message to the chat area.
+
+        Args:
+            message (str): The message text to display.
+            is_user (bool): Whether the message is from the user.
+        """
         # Remove the stretch before adding new message
         self.chat_layout.takeAt(self.chat_layout.count() - 1)
         
@@ -95,7 +103,11 @@ class ChatArea(QScrollArea):
         self.chat_layout.addStretch()
     
     def append_to_stream(self, chunk_text):
-        """Append text to the current streaming assistant bubble."""
+        """Append text to the current streaming assistant bubble.
+
+        Args:
+            chunk_text (str): The text chunk to append to the stream.
+        """
         if self._streaming_bubble is None:
             return
         self._streaming_text += chunk_text
@@ -112,7 +124,12 @@ class ChatArea(QScrollArea):
         self._streaming_text = ""
         
     def save_message(self, message, is_user):
-        """Save a message to chat_history.json"""
+        """Save a message to chat_history.json.
+
+        Args:
+            message (str): The message text to save.
+            is_user (bool): Whether the message is from the user.
+        """
         try:
             with open(self.chat_history_path, 'r') as f:
                 history = json.load(f)
@@ -140,14 +157,23 @@ class ChatArea(QScrollArea):
             json.dump([], f)
     
     def shortcut_scroll(self, amount):
-        """Scroll the chat area by a specified amount"""
+        """Scroll the chat area by a specified amount.
+
+        Args:
+            amount (int): The pixel amount to scroll (positive for down, negative for up).
+        """
         scrollbar = self.verticalScrollBar()
         target = scrollbar.value() + amount
         duration = 100
         self._animate_to(target, duration)
     
     def _animate_to(self, target, duration):
-        """Animate scrollbar to target position"""
+        """Animate scrollbar to target position.
+
+        Args:
+            target (int): The target scroll position.
+            duration (int): The animation duration in milliseconds.
+        """
         anim = self._scroll_anim
         if anim.state() == QAbstractAnimation.State.Running:
             anim.stop()

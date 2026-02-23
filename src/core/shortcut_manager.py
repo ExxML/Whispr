@@ -1,18 +1,31 @@
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QTimer, QPoint, QObject, pyqtSignal
 import ctypes
 import ctypes.wintypes
 import math
 import threading
+
+from PyQt6.QtCore import QObject, QPoint, QTimer, pyqtSignal
+from PyQt6.QtWidgets import QApplication
+
 from core.win32_hook import (
-    WH_KEYBOARD_LL,
-    WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_QUIT,
-    VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN,
-    MOD_CTRL, MOD_ALT, MOD_SHIFT,
+    HOOKPROC,
+    KBDLLHOOKSTRUCT,
+    MOD_ALT,
+    MOD_CTRL,
+    MOD_SHIFT,
     MODIFIER_VK_CODES,
-    KBDLLHOOKSTRUCT, HOOKPROC,
-    user32, kernel32,
+    VK_DOWN,
+    VK_LEFT,
+    VK_RIGHT,
+    VK_UP,
+    WH_KEYBOARD_LL,
+    WM_KEYDOWN,
+    WM_KEYUP,
+    WM_QUIT,
+    WM_SYSKEYDOWN,
+    WM_SYSKEYUP,
     get_active_modifiers,
+    kernel32,
+    user32,
 )
 
 class ShortcutManager(QObject):
@@ -109,11 +122,18 @@ class ShortcutManager(QObject):
     # Win32 Keyboard Hook Logic
 
     def _low_level_keyboard_proc(self, nCode, wParam, lParam):
-        """
-        Win32 low-level keyboard hook callback.
+        """Win32 low-level keyboard hook callback.
 
         Checks every key event against the registered hotkey tables.
         Matching events are suppressed (not forwarded to other applications).
+
+        Args:
+            nCode (int): Hook code indicating how to process the message.
+            wParam (int): Message type identifier (e.g. WM_KEYDOWN, WM_KEYUP).
+            lParam (int): Pointer to a KBDLLHOOKSTRUCT containing key event data.
+
+        Returns:
+            int: 1 to suppress the key event, or the result of CallNextHookEx.
         """
         if nCode >= 0:
             kb = ctypes.cast(lParam, ctypes.POINTER(KBDLLHOOKSTRUCT)).contents
@@ -211,7 +231,12 @@ class ShortcutManager(QObject):
         self.animation_frame_time = 1000 // self.animation_fps  # Time per frame in ms
 
     def _start_animation(self, target_x, target_y):
-        """Begin an animated move to the target position"""
+        """Begin an animated move to the target position.
+
+        Args:
+            target_x (int): Target x-coordinate for the overlay window.
+            target_y (int): Target y-coordinate for the overlay window.
+        """
         self.animation_start_pos = self.overlay.pos()
         self.animation_target_pos = QPoint(target_x, target_y)
         self.animation_progress = 0.0

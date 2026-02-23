@@ -1,4 +1,5 @@
 import os
+
 import mss
 
 class ScreenshotManager:

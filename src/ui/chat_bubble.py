@@ -1,7 +1,8 @@
+import re
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QFontMetrics
-from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout
-import re
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 class ChatBubble(QWidget):
     """A chat bubble widget for displaying messages"""
@@ -13,6 +14,7 @@ class ChatBubble(QWidget):
         self.initUI()
     
     def initUI(self):
+        """Initialize the chat bubble UI layout and styling."""
         layout = QHBoxLayout(self)
         layout.setContentsMargins(10, 5, 10, 5)
         
@@ -73,7 +75,11 @@ class ChatBubble(QWidget):
         layout.setSpacing(0)
 
     def set_bot_message(self, message):
-        """Format the bot message and set the text as the label"""
+        """Format the bot message and set the text as the label.
+
+        Args:
+            message (str): The raw bot message text to format and display.
+        """
         # Parse markdown formatting in the generated response
         self.message = message
         
@@ -100,6 +106,14 @@ class ChatBubble(QWidget):
         
         # Replace `inline code` with formatted HTML
         def format_inline_code(match):
+            """Format an inline code match with monospace styling.
+
+            Args:
+                match (re.Match): Regex match object containing the inline code.
+
+            Returns:
+                str: HTML-formatted inline code string.
+            """
             code = match.group(1)
             return f'<code style="font-family: monospace; background-color: rgba(255, 255, 255, 0.1); padding: 0.2em 0.4em; border-radius: 3px;">{code}</code>'
         
@@ -118,7 +132,14 @@ class ChatBubble(QWidget):
         self.message_label.setText(html_message)
     
     def _format_code_block(self, match):
-        """Format a Python code block"""
+        """Format a code block with syntax highlighting and styling.
+
+        Args:
+            match (re.Match): Regex match object containing the code block content.
+
+        Returns:
+            str: HTML-formatted code block string.
+        """
         code = match.group(1)
         # Replace HTML special characters
         code = code.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')

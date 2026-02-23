@@ -1,6 +1,6 @@
-from PyQt6.QtGui import QFont
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLineEdit
+from PyQt6.QtGui import QFont
+from PyQt6.QtWidgets import QHBoxLayout, QLineEdit, QWidget
 
 class InputBar(QWidget):
     """Input bar with text field and send button"""
@@ -13,6 +13,7 @@ class InputBar(QWidget):
         self.initUI()
     
     def initUI(self):
+        """Initialize the input bar UI layout and text field."""
         layout = QHBoxLayout(self)
         layout.setContentsMargins(12, 6, 12, 12)
         layout.setSpacing(8)
@@ -53,5 +54,9 @@ class InputBar(QWidget):
             self.input_field.setFocus()
     
     def set_enabled(self, enabled):
-        """Enable or disable the input bar"""
+        """Enable or disable the input bar.
+
+        Args:
+            enabled (bool): Whether the input bar should be enabled.
+        """
         self.input_field.setEnabled(enabled)

@@ -1,12 +1,14 @@
-from PyQt6.QtWidgets import QApplication
-from ui.overlay_window import Overlay
-from core.ai_manager import AIManager
-from ui.system_tray import SystemTray
-from core.shortcut_manager import ShortcutManager
-from core.screenshot_manager import ScreenshotManager
+import json
 import os
 import sys
-import json
+
+from PyQt6.QtWidgets import QApplication
+
+from core.ai_manager import AIManager
+from core.screenshot_manager import ScreenshotManager
+from core.shortcut_manager import ShortcutManager
+from ui.overlay_window import Overlay
+from ui.system_tray import SystemTray
 
 if __name__ == '__main__':
     # Clear chat history on program start
