@@ -15,7 +15,7 @@ class ChatArea(QScrollArea):
         self.initUI()
         self._init_scroll_animation()
         base_dir = os.getcwd()
-        self.chat_history_path = os.path.join(base_dir, 'src', 'data', 'chat_history.json')
+        self.chat_history_path = os.path.join(base_dir, "src", "data", "chat_history.json")
         self._streaming_bubble = None
         self._streaming_text = ""
         
@@ -28,7 +28,7 @@ class ChatArea(QScrollArea):
         
         # Create container widget for messages
         self.chat_container = QWidget()
-        self.chat_container.setStyleSheet('background-color: transparent;')
+        self.chat_container.setStyleSheet("background-color: transparent;")
         self.chat_layout = QVBoxLayout(self.chat_container)
         self.chat_layout.setContentsMargins(3, 3, 3, 3)
         self.chat_layout.addStretch()
@@ -132,7 +132,7 @@ class ChatArea(QScrollArea):
             is_user (bool): Whether the message is from the user.
         """
         try:
-            with open(self.chat_history_path, 'r') as f:
+            with open(self.chat_history_path, "r") as f:
                 history = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             history = []
@@ -142,7 +142,7 @@ class ChatArea(QScrollArea):
             "is_user": is_user
         })
 
-        with open(self.chat_history_path, 'w') as f:
+        with open(self.chat_history_path, "w") as f:
             json.dump(history, f, indent=2)
     
     def clear_chat(self):
@@ -154,7 +154,7 @@ class ChatArea(QScrollArea):
                 item.widget().deleteLater()
         
         # Clear chat history (JSON file)
-        with open(self.chat_history_path, 'w') as f:
+        with open(self.chat_history_path, "w") as f:
             json.dump([], f)
     
     def shortcut_scroll(self, amount):

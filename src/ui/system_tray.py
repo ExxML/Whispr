@@ -10,11 +10,11 @@ class SystemTray(QSystemTrayIcon):
     def __init__(self, main_window, shortcut_manager=None, parent=None):
         # Set icon
         base_dir = os.getcwd()
-        icon_path = os.path.join(base_dir, 'src', 'assets', 'blank.ico')
+        icon_path = os.path.join(base_dir, "src", "assets", "blank.ico")
         icon = QIcon(icon_path)
         
         super().__init__(icon, parent)
-        self.setToolTip('Whispr')
+        self.setToolTip("whispr")
         self.main_window = main_window
         self.shortcut_manager = shortcut_manager
 

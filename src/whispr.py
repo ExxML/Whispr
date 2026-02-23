@@ -11,11 +11,11 @@ from ui.main_window import MainWindow
 from ui.system_tray import SystemTray
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Clear chat history on program start
     base_dir = os.getcwd()
-    chat_history_path = os.path.join(base_dir, 'src', 'data', 'chat_history.json')
-    with open(chat_history_path, 'w') as f:
+    chat_history_path = os.path.join(base_dir, "src", "data", "chat_history.json")
+    with open(chat_history_path, "w") as f:
         json.dump([], f)
     
     app = QApplication(sys.argv)

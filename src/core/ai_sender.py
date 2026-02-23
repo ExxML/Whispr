@@ -12,10 +12,10 @@ class AISender():
     def __init__(self, screenshot_manager):
         # Load environment variables from the .env file
         base_dir = Path(__file__).resolve().parent.parent.parent
-        load_dotenv(base_dir / '.env')
+        load_dotenv(base_dir / ".env")
         
         # Initialize Gemini client
-        self.client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
+        self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
         
         self.screenshot_manager = screenshot_manager
 

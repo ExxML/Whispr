@@ -60,7 +60,7 @@ class MainWindow(QWidget):
         header_layout = QHBoxLayout()
         header_layout.addWidget(self.clear_chat_button)
         header_layout.addStretch(1)
-        self.min_btn = QPushButton('–', self)
+        self.min_btn = QPushButton("–", self)
         self.min_btn.setFixedSize(36, 32)
         self.min_btn.clicked.connect(self.hide)
         self.min_btn.setStyleSheet("""
@@ -78,7 +78,7 @@ class MainWindow(QWidget):
                 border-radius: 0px;
             }
         """)
-        self.close_btn = QPushButton('×', self)
+        self.close_btn = QPushButton("×", self)
         self.close_btn.setFixedSize(36, 32)
         self.close_btn.clicked.connect(self.quit_app)
         self.close_btn.setStyleSheet("""
