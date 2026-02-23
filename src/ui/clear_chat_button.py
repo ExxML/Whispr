@@ -3,7 +3,7 @@ from PyQt6.QtCore import QSize
 from PyQt6.QtWidgets import QPushButton
 import os
 
-class ClearChat(QPushButton):
+class ClearChatButton(QPushButton):
     def __init__(self, parent, on_click, chat_area):
         super().__init__("", parent)
         self.chat_area = chat_area

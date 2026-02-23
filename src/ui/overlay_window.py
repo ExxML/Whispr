@@ -3,7 +3,7 @@ from PyQt6.QtCore import Qt, QTimer, QPoint, QObject, pyqtSignal
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
 from .input_bar import InputBar
 from .chat_area import ChatArea
-from .clear_chat import ClearChat
+from .clear_chat_button import ClearChatButton
 from ctypes import wintypes
 import ctypes
 import threading
@@ -100,7 +100,7 @@ class Overlay(QWidget):
         self.input_bar = InputBar(self)
 
         # Create and add title bar buttons
-        self.clear_chat_button = ClearChat(self, self.chat_area.clear_chat, self.chat_area)
+        self.clear_chat_button = ClearChatButton(self, self.chat_area.clear_chat, self.chat_area)
         header_layout = QHBoxLayout()
         header_layout.addWidget(self.clear_chat_button)
         header_layout.addStretch(1)
