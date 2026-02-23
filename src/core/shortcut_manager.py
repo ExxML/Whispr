@@ -1,10 +1,28 @@
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QTimer, QPoint, QObject, pyqtSignal
+import ctypes
+import ctypes.wintypes
 import math
-import keyboard
+import threading
+from core.win32_hook import (
+    WH_KEYBOARD_LL,
+    WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_QUIT,
+    VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN,
+    MOD_CTRL, MOD_ALT, MOD_SHIFT,
+    MODIFIER_VK_CODES,
+    KBDLLHOOKSTRUCT, HOOKPROC,
+    user32, kernel32,
+    get_active_modifiers,
+)
 
 class ShortcutManager(QObject):
-    # Signals for safe threading
+    """
+    Manages global keyboard shortcuts via a Win32 low-level keyboard hook.
+    All registered hotkeys are suppressed so other applications never see the
+    key events.  Conditional hotkeys (everything except the visibility toggle)
+    are only active while the overlay is visible.
+    """
+    # Qt signals for thread-safe communication with the main thread
     move_signal = pyqtSignal(int, int)
     scroll_signal = pyqtSignal(int)
     quit_signal = pyqtSignal()
@@ -12,17 +30,15 @@ class ShortcutManager(QObject):
     clear_chat_signal = pyqtSignal()
     minimize_signal = pyqtSignal()
     generate_content_with_screenshot_signal = pyqtSignal(str, bool)
-    
+
     def __init__(self, overlay, screenshot_manager):
         super().__init__()
         self.overlay = overlay
         self.screenshot_manager = screenshot_manager
         self.is_visible = True
-        self.setup_shortcuts()
-        self.setup_movement_distances()
 
         # Connect signals
-        self.move_signal.connect(self._start_animation) # Signal needed because QTimers cannot be started from another thread
+        self.move_signal.connect(self._start_animation)  # Signal needed because QTimers cannot be started from another thread
         self.scroll_signal.connect(self.overlay.chat_area.shortcut_scroll)
         self.quit_signal.connect(self.overlay.quit_app)
         self.screenshot_signal.connect(self.screenshot_manager.take_screenshot)
@@ -37,63 +53,178 @@ class ShortcutManager(QObject):
         self.animation_start_pos = None
         self.animation_target_pos = None
         self.animation_progress = 0.0
-    
-    def setup_shortcuts(self):
-        """Setup all keyboard shortcuts with blocking behavior"""
-        # Shortcuts:
-        # - Ctrl + E to show/hide overlay
-        # - Ctrl + D to generate AI output
-        # - Ctrl + Alt + <ArrowKeys> to move overlay window
-        # - Ctrl + Shift + <Up/Down> to scroll up/down in the overlay window
-        # - Ctrl + Shift + Q to quit the application
-        keyboard.add_hotkey('Ctrl + E', self.toggle_overlay, suppress = True) # Toggle visibility is always active
-        self.register_hotkeys()
-    
-    def register_hotkeys(self):
-        """Register hotkeys that are only active when overlay is visible"""
-        keyboard.add_hotkey('Ctrl + Alt + Left', self.move_window_left, suppress = True)
-        keyboard.add_hotkey('Ctrl + Alt + Right', self.move_window_right, suppress = True)
-        keyboard.add_hotkey('Ctrl + Alt + Up', self.move_window_up, suppress = True)
-        keyboard.add_hotkey('Ctrl + Alt + Down', self.move_window_down, suppress = True)
-        keyboard.add_hotkey('Ctrl + Shift + Up', self.scroll_up, suppress = True)
-        keyboard.add_hotkey('Ctrl + Shift + Down', self.scroll_down, suppress = True)
-        keyboard.add_hotkey('Ctrl + Shift + Q', self.close_app, suppress = True)
-        keyboard.add_hotkey('Ctrl + Shift + C', self.screenshot, suppress = True)
-        keyboard.add_hotkey('Ctrl + Q', self.minimize, suppress = True)
-        keyboard.add_hotkey('Ctrl + N', self.clear_chat, suppress = True)
-        keyboard.add_hotkey('Ctrl + D', self.generate_with_screenshot, suppress = True, trigger_on_release = True)
-        keyboard.add_hotkey('Ctrl + G', self.generate_with_screenshot_fix, suppress = True, trigger_on_release = True)
-    
-    def unregister_hotkeys(self):
-        """Unregister hotkeys that should only work when overlay is visible"""
-        keyboard.remove_hotkey('Ctrl + Alt + Left')
-        keyboard.remove_hotkey('Ctrl + Alt + Right')
-        keyboard.remove_hotkey('Ctrl + Alt + Up')
-        keyboard.remove_hotkey('Ctrl + Alt + Down')
-        keyboard.remove_hotkey('Ctrl + Shift + Up')
-        keyboard.remove_hotkey('Ctrl + Shift + Down')
-        keyboard.remove_hotkey('Ctrl + Shift + Q')
-        keyboard.remove_hotkey('Ctrl + Shift + C')
-        keyboard.remove_hotkey('Ctrl + Q')
-        keyboard.remove_hotkey('Ctrl + N')
-        keyboard.remove_hotkey('Ctrl + D')
-        keyboard.remove_hotkey('Ctrl + G')
-    
+        self.setup_movement_distances()
+
+        # Hotkey lookup tables: (modifier_bitmask, vk_code) -> (callback, repeat_callbacks)
+        self._always_active_hotkeys: dict[tuple[int, int], tuple[callable, bool]] = {}
+        self._overlay_hotkeys: dict[tuple[int, int], tuple[callable, bool]] = {}
+        self._overlay_hotkeys_enabled = True
+        self._suppressed_vk_codes: set[int] = set()
+        self._held_vk_codes: set[int] = set()  # Tracks physically held non-modifier keys
+        self._define_hotkeys()
+
+        # Low-level keyboard hook (prevent GC of the callback reference)
+        self._hook_proc_ref = HOOKPROC(self._low_level_keyboard_proc)
+        self._hook_handle = None
+        self._hook_thread_id = None
+        self._start_hook()
+
+    # Hotkey Definitions
+
+    def _define_hotkeys(self):
+        """
+        Populate the hotkey lookup tables.
+
+        Default Shortcuts:
+            Ctrl + E - Show / hide overlay (always active)
+            Ctrl + D - Generate AI output (trigger on release)
+            Ctrl + G - Fix / improve code (trigger on release)
+            Ctrl + Alt + <ArrowKeys> - Move overlay window
+            Ctrl + Shift + Up / Down - Scroll chat area
+            Ctrl + Shift + Q - Quit the application
+            Ctrl + Shift + C - Take a screenshot
+            Ctrl + Q - Minimize overlay
+            Ctrl + N - Clear chat history
+        """
+        self._always_active_hotkeys = {
+            (MOD_CTRL, ord('E')): (self.toggle_overlay, False),
+        }
+
+        self._overlay_hotkeys = {
+            (MOD_CTRL | MOD_ALT, VK_LEFT): (self.move_window_left, True),
+            (MOD_CTRL | MOD_ALT, VK_RIGHT): (self.move_window_right, True),
+            (MOD_CTRL | MOD_ALT, VK_UP): (self.move_window_up, True),
+            (MOD_CTRL | MOD_ALT, VK_DOWN): (self.move_window_down, True),
+            (MOD_CTRL | MOD_SHIFT, VK_UP): (self.scroll_up, True),
+            (MOD_CTRL | MOD_SHIFT, VK_DOWN): (self.scroll_down, True),
+            (MOD_CTRL | MOD_SHIFT, ord('Q')): (self.close_app, False),
+            (MOD_CTRL | MOD_SHIFT, ord('C')): (self.screenshot, False),
+            (MOD_CTRL, ord('Q')): (self.minimize, False),
+            (MOD_CTRL, ord('N')): (self.clear_chat, False),
+            (MOD_CTRL, ord('D')): (self.generate_with_screenshot, False),
+            (MOD_CTRL, ord('G')): (self.generate_with_screenshot_fix, False),
+        }
+
+    # Win32 Keyboard Hook Logic
+
+    def _low_level_keyboard_proc(self, nCode, wParam, lParam):
+        """
+        Win32 low-level keyboard hook callback.
+
+        Checks every key event against the registered hotkey tables.
+        Matching events are suppressed (not forwarded to other applications).
+        """
+        if nCode >= 0:
+            kb = ctypes.cast(lParam, ctypes.POINTER(KBDLLHOOKSTRUCT)).contents
+            vk_code = kb.vkCode
+            is_key_down = wParam in (WM_KEYDOWN, WM_SYSKEYDOWN)
+            is_key_up = wParam in (WM_KEYUP, WM_SYSKEYUP)
+
+            # Only match on non-modifier keys; modifiers are always passed through
+            if vk_code not in MODIFIER_VK_CODES:
+                modifiers = get_active_modifiers()
+                hotkey_key = (modifiers, vk_code)
+
+                # Look up in always-active table first, then overlay table
+                entry = self._always_active_hotkeys.get(hotkey_key)
+                if entry is None and self._overlay_hotkeys_enabled:
+                    entry = self._overlay_hotkeys.get(hotkey_key)
+
+                if entry is not None:
+                    callback, repeat_callbacks = entry
+                    if is_key_down:
+                        # For no-repeat hotkeys, skip if the key is already physically held
+                        if not repeat_callbacks and vk_code in self._held_vk_codes:
+                            return 1  # Suppress repeat without calling callback
+                        self._held_vk_codes.add(vk_code)
+                        self._suppressed_vk_codes.add(vk_code)
+                        callback()
+                        return 1  # Suppress the key event
+
+                    if is_key_up:
+                        self._held_vk_codes.discard(vk_code)
+                        if vk_code in self._suppressed_vk_codes:
+                            self._suppressed_vk_codes.discard(vk_code)
+                            return 1  # Suppress the matching key-up
+
+                elif is_key_up:
+                    # Key was held but hotkey no longer matches (e.g. modifier changed) - clean up
+                    self._held_vk_codes.discard(vk_code)
+
+        return user32.CallNextHookEx(self._hook_handle, nCode, wParam, lParam)
+
+    def _hook_thread_entry(self):
+        """
+        Entry point for the keyboard hook thread.
+
+        Installs the low-level keyboard hook, then enters a message loop that
+        keeps the hook alive until a WM_QUIT message is posted.
+        """
+        self._hook_thread_id = kernel32.GetCurrentThreadId()
+        h_module = kernel32.GetModuleHandleW(None)
+
+        self._hook_handle = user32.SetWindowsHookExW(
+            WH_KEYBOARD_LL,
+            self._hook_proc_ref,
+            h_module,
+            0,  # Monitor all threads (required for low-level hooks)
+        )
+
+        # Pump messages to keep the hook alive
+        msg = ctypes.wintypes.MSG()
+        while user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:
+            pass  # No dispatch needed; WM_QUIT causes GetMessageW to return 0
+
+        if self._hook_handle:
+            user32.UnhookWindowsHookEx(self._hook_handle)
+            self._hook_handle = None
+
+    def _start_hook(self):
+        """Start the keyboard hook on a dedicated daemon thread"""
+        thread = threading.Thread(target=self._hook_thread_entry, daemon=True)
+        thread.start()
+
+    def stop_hook(self):
+        """Stop the keyboard hook and its message loop"""
+        if self._hook_thread_id is not None:
+            user32.PostThreadMessageW(self._hook_thread_id, WM_QUIT, 0, 0)
+            self._hook_thread_id = None
+
+    # Hotkey Callback Functions
+
+    def toggle_overlay(self):
+        """Toggle overlay visibility and enable/disable conditional hotkeys"""
+        if self.is_visible:
+            self.overlay.hide()
+            self._overlay_hotkeys_enabled = False
+        else:
+            self.overlay.show()
+            self.overlay.raise_()  # Bring to front
+            self._overlay_hotkeys_enabled = True
+        self.is_visible = not self.is_visible
+
     def setup_movement_distances(self):
         """Determine screen geometry and movement distances"""
         self.screen_rect = QApplication.primaryScreen().availableGeometry()
         self.max_move_distance_x = self.screen_rect.width() // 14
         self.max_move_distance_y = self.screen_rect.height() // 14
-        self.screen_bounds_offset = 2 # Always keep 2 pixels to screen edge to prevent setGeometry errors
-        self.animation_duration = 100 # Animation duration in milliseconds
-        self.animation_fps = 120 # Frames per second
-        self.animation_frame_time = 1000 // self.animation_fps # Time per frame in ms
-    
+        self.screen_bounds_offset = 2  # Always keep 2 pixels to screen edge to prevent setGeometry errors
+        self.animation_duration = 100  # Animation duration in milliseconds
+        self.animation_fps = 120  # Frames per second
+        self.animation_frame_time = 1000 // self.animation_fps  # Time per frame in ms
+
+    def _start_animation(self, target_x, target_y):
+        """Begin an animated move to the target position"""
+        self.animation_start_pos = self.overlay.pos()
+        self.animation_target_pos = QPoint(target_x, target_y)
+        self.animation_progress = 0.0
+        self.animation_active = True
+        self.animation_timer.start(self.animation_frame_time)
+
     def _animate_step(self):
-        """Animate one step of movement"""
-        # Increment progress
+        """Advance one frame of the movement animation"""
         self.animation_progress += self.animation_frame_time / self.animation_duration
-        
+
         if self.animation_progress >= 1.0:
             # Animation complete
             self.overlay.move(self.animation_target_pos)
@@ -105,33 +236,14 @@ class ShortcutManager(QObject):
             current_x = int(self.animation_start_pos.x() + (self.animation_target_pos.x() - self.animation_start_pos.x()) * ease_progress)
             current_y = int(self.animation_start_pos.y() + (self.animation_target_pos.y() - self.animation_start_pos.y()) * ease_progress)
             self.overlay.move(current_x, current_y)
-    
-    def _start_animation(self, target_x, target_y):
-        """Start animation"""
-        self.animation_start_pos = self.overlay.pos()
-        self.animation_target_pos = QPoint(target_x, target_y)
-        self.animation_progress = 0.0
-        self.animation_active = True
-        self.animation_timer.start(self.animation_frame_time)
 
-    def toggle_overlay(self):
-        """Toggle overlay visibility"""
-        if self.is_visible:
-            self.overlay.hide()
-            self.unregister_hotkeys()
-        else:
-            self.overlay.show()
-            self.overlay.raise_() # Bring to front
-            self.register_hotkeys()
-        self.is_visible = not self.is_visible
-    
     def move_window_left(self):
         """Move overlay window left"""
         if self.animation_active and self.animation_progress < 0.5:
             return
         new_x = max(self.screen_bounds_offset, self.overlay.geometry().x() - self.max_move_distance_x)
         self.move_signal.emit(new_x, self.overlay.geometry().y())
-    
+
     def move_window_right(self):
         """Move overlay window right"""
         if self.animation_active and self.animation_progress < 0.5:
@@ -139,14 +251,14 @@ class ShortcutManager(QObject):
         max_x = self.screen_rect.width() - self.overlay.geometry().width() - self.screen_bounds_offset
         new_x = min(max_x, self.overlay.geometry().x() + self.max_move_distance_x)
         self.move_signal.emit(new_x, self.overlay.geometry().y())
-    
+
     def move_window_up(self):
         """Move overlay window up"""
         if self.animation_active and self.animation_progress < 0.5:
             return
         new_y = max(self.screen_bounds_offset, self.overlay.geometry().y() - self.max_move_distance_y)
         self.move_signal.emit(self.overlay.geometry().x(), new_y)
-    
+
     def move_window_down(self):
         """Move overlay window down"""
         if self.animation_active and self.animation_progress < 0.5:
@@ -154,33 +266,33 @@ class ShortcutManager(QObject):
         max_y = self.screen_rect.height() - self.overlay.geometry().height() - self.screen_bounds_offset
         new_y = min(max_y, self.overlay.geometry().y() + self.max_move_distance_y)
         self.move_signal.emit(self.overlay.geometry().x(), new_y)
-    
+
     def scroll_up(self):
         """Scroll up in the chat area"""
         self.scroll_signal.emit(-100)
-    
+
     def scroll_down(self):
         """Scroll down in the chat area"""
         self.scroll_signal.emit(100)
 
     def close_app(self):
         """Close the application"""
-        self.quit_signal.emit() # Must emit signal to run on main thread
-        
+        self.quit_signal.emit()  # Must emit signal to run on main thread
+
     def screenshot(self):
         """Take a screenshot of the primary screen"""
         self.screenshot_signal.emit()
-        
+
     def minimize(self):
         """Minimize the overlay window"""
         self.minimize_signal.emit()
         self.is_visible = False
-        self.unregister_hotkeys()
-        
+        self._overlay_hotkeys_enabled = False
+
     def clear_chat(self):
         """Clear the chat history"""
         self.clear_chat_signal.emit()
-        
+
     def generate_with_screenshot(self):
         """Automatically generate content with screenshot"""
         self.generate_content_with_screenshot_signal.emit(
@@ -191,13 +303,13 @@ class ShortcutManager(QObject):
 4. Give me a short example walkthrough using your solution.
 5. Give me a code block with the solution in Python, supplied with comments.
 6. Give me a concise explanation of the solution.
-7. Give me the time and space complexity for the solution.""", 
-            True # Take a screenshot
+7. Give me the time and space complexity for the solution.""",
+            True  # Take a screenshot
         )
-        
+
     def generate_with_screenshot_fix(self):
         """Automatically generate content with screenshot for fixing/improving code"""
         self.generate_content_with_screenshot_signal.emit(
-            "Fix or improve the code based on the new instructions. Then, state the changes you made.", 
-            True # Take a screenshot
+            "Fix or improve the code based on the new instructions. Then, state the changes you made.",
+            True  # Take a screenshot
         )
