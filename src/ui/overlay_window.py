@@ -212,6 +212,13 @@ class Overlay(QWidget):
         except Exception:
             return True
 
+    def toggle_window_visibility(self):
+        if self.isVisible():
+            self.hide()
+        else:
+            self.show()
+            self.raise_()  # Bring to front
+
     def handle_message(self, message, take_screenshot = False):
         """Handle a user message"""
         # If there's an active worker, stop it and disconnect signals

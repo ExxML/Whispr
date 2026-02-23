@@ -23,19 +23,20 @@ class ShortcutManager(QObject):
     are only active while the overlay is visible.
     """
     # Qt signals for thread-safe communication with the main thread
+    # ALL UI actions must be performed on the main thread to avoid crashes and unpredictable behaviour (ex. leaking hotkeys)
     move_signal = pyqtSignal(int, int)
     scroll_signal = pyqtSignal(int)
     quit_signal = pyqtSignal()
     screenshot_signal = pyqtSignal()
     clear_chat_signal = pyqtSignal()
     minimize_signal = pyqtSignal()
+    toggle_signal = pyqtSignal()
     generate_content_with_screenshot_signal = pyqtSignal(str, bool)
 
     def __init__(self, overlay, screenshot_manager):
         super().__init__()
         self.overlay = overlay
         self.screenshot_manager = screenshot_manager
-        self.is_visible = True
 
         # Connect signals
         self.move_signal.connect(self._start_animation)  # Signal needed because QTimers cannot be started from another thread
@@ -44,6 +45,7 @@ class ShortcutManager(QObject):
         self.screenshot_signal.connect(self.screenshot_manager.take_screenshot)
         self.clear_chat_signal.connect(self.overlay.chat_area.clear_chat)
         self.minimize_signal.connect(self.overlay.hide)
+        self.toggle_signal.connect(self.overlay.toggle_window_visibility)
         self.generate_content_with_screenshot_signal.connect(self.overlay.handle_message)
 
         # Initialize animation
@@ -58,7 +60,6 @@ class ShortcutManager(QObject):
         # Hotkey lookup tables: (modifier_bitmask, vk_code) -> (callback, repeat_callbacks)
         self._always_active_hotkeys: dict[tuple[int, int], tuple[callable, bool]] = {}
         self._overlay_hotkeys: dict[tuple[int, int], tuple[callable, bool]] = {}
-        self._overlay_hotkeys_enabled = True
         self._suppressed_vk_codes: set[int] = set()
         self._held_vk_codes: set[int] = set()  # Tracks physically held non-modifier keys
         self._define_hotkeys()
@@ -87,7 +88,7 @@ class ShortcutManager(QObject):
             Ctrl + N - Clear chat history
         """
         self._always_active_hotkeys = {
-            (MOD_CTRL, ord('E')): (self.toggle_overlay, False),
+            (MOD_CTRL, ord('E')): (self.toggle_window_visibility, False),
             (MOD_CTRL | MOD_SHIFT, ord('Q')): (self.close_app, False),
         }
 
@@ -127,7 +128,7 @@ class ShortcutManager(QObject):
 
                 # Look up in always-active table first, then overlay table
                 entry = self._always_active_hotkeys.get(hotkey_key)
-                if entry is None and self._overlay_hotkeys_enabled:
+                if entry is None and self.overlay.isVisible():
                     entry = self._overlay_hotkeys.get(hotkey_key)
 
                 if entry is not None:
@@ -195,16 +196,9 @@ class ShortcutManager(QObject):
 
     # Hotkey Callback Functions
 
-    def toggle_overlay(self):
-        """Toggle overlay visibility and enable/disable conditional hotkeys"""
-        if self.is_visible:
-            self.overlay.hide()
-            self._overlay_hotkeys_enabled = False
-        else:
-            self.overlay.show()
-            self.overlay.raise_()  # Bring to front
-            self._overlay_hotkeys_enabled = True
-        self.is_visible = not self.is_visible
+    def toggle_window_visibility(self):
+        """Toggle main window visibility"""
+        self.toggle_signal.emit()
 
     def setup_movement_distances(self):
         """Determine screen geometry and movement distances"""
@@ -287,10 +281,8 @@ class ShortcutManager(QObject):
         self.screenshot_signal.emit()
 
     def minimize(self):
-        """Minimize the overlay window"""
+        """Minimize the main window"""
         self.minimize_signal.emit()
-        self.is_visible = False
-        self._overlay_hotkeys_enabled = False
 
     def clear_chat(self):
         """Clear the chat history"""

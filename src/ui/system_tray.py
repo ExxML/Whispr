@@ -33,7 +33,7 @@ class SystemTray(QSystemTrayIcon):
     def on_tray_activated(self, reason):
         # Show/Hide on left click
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
-            self.shortcut_manager.toggle_overlay()
+            self.overlay_window.toggle_window_visibility()
     
     def quit_app(self):
         self.overlay_window.quit_app()
