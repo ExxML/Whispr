@@ -1,7 +1,7 @@
 import re
 
 
-def format_message(message):
+def format_message(message: str) -> str:
     """Convert a raw bot message (Markdown-like text) to an HTML string.
 
     Args:
@@ -47,7 +47,7 @@ def format_message(message):
     return f"<div style='line-height: 1.4; white-space: pre-wrap;'>{formatted}</div>"
 
 
-def _format_inline_code(match):
+def _format_inline_code(match: re.Match) -> str:
     """Format an inline code match with monospace styling.
 
     Args:
@@ -65,7 +65,7 @@ def _format_inline_code(match):
     )
 
 
-def _format_code_block(match):
+def _format_code_block(match: re.Match) -> str:
     """Format a fenced code block with syntax highlighting and styling.
 
     Args:

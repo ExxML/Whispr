@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Callable
 
 from dotenv import load_dotenv
 from google import genai
@@ -19,7 +20,7 @@ class AISender():
         
         self.screenshot_manager = screenshot_manager
 
-    def generate_content(self, user_input, on_chunk=None):
+    def generate_content(self, user_input: str, on_chunk: Callable[[str], None] | None = None) -> str:
         """Generate AI content by streaming from the Gemini model.
 
         Args:
@@ -51,7 +52,7 @@ class AISender():
 
         return full_response
 
-    def generate_content_with_screenshot(self, user_input, on_chunk=None):
+    def generate_content_with_screenshot(self, user_input: str, on_chunk: Callable[[str], None] | None = None) -> str:
         """Generate AI content with a screenshot of the primary screen.
 
         Args:

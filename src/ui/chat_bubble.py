@@ -14,7 +14,7 @@ class ChatBubble(QWidget):
         self.is_user = is_user
         self.initUI()
     
-    def initUI(self):
+    def initUI(self) -> None:
         """Initialize the chat bubble UI layout and styling."""
         layout = QHBoxLayout(self)
         layout.setContentsMargins(10, 5, 10, 5)
@@ -75,7 +75,7 @@ class ChatBubble(QWidget):
         
         layout.setSpacing(0)
 
-    def set_bot_message(self, message):
+    def set_bot_message(self, message: str) -> None:
         """Format the bot message and set the text as the label.
 
         Args:

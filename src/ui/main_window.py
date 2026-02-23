@@ -2,7 +2,7 @@ import ctypes
 from ctypes import wintypes
 
 from PyQt6.QtCore import QPoint, Qt, QTimer
-from PyQt6.QtGui import QColor, QPainter, QPen
+from PyQt6.QtGui import QColor, QMouseEvent, QPainter, QPen
 from PyQt6.QtWidgets import QApplication, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
 from .chat_area import ChatArea
@@ -19,7 +19,7 @@ class MainWindow(QWidget):
         self.initUI()
         self.worker = AIReceiver(ai_sender, self.chat_area)
         
-    def initUI(self):
+    def initUI(self) -> None:
         """Initialize the main window UI layout and components."""
         # Config variables
         self.window_width = 550
@@ -127,7 +127,7 @@ class MainWindow(QWidget):
         self._visibility_timer.start()
 
     # Set cursor as default texture regardless of where it is hovering on the main window
-    def _unset_cursor_recursive(self, widget):
+    def _unset_cursor_recursive(self, widget: QWidget) -> None:
         """Recursively unset cursor for a widget and all its children.
 
         Args:
@@ -139,7 +139,7 @@ class MainWindow(QWidget):
             child.setAttribute(Qt.WidgetAttribute.WA_SetCursor, False)
             child.unsetCursor()
 
-    def ensure_window_visible(self):
+    def ensure_window_visible(self) -> None:
         """Raise the main window if it is no longer the topmost window."""
         try:
             if not self._is_topmost_window():
@@ -147,7 +147,7 @@ class MainWindow(QWidget):
         except Exception:
             pass
 
-    def _is_topmost_window(self):
+    def _is_topmost_window(self) -> bool:
         """Check if the main window is the topmost window at its corner positions.
 
         Returns:
@@ -178,7 +178,7 @@ class MainWindow(QWidget):
         except Exception:
             return True
 
-    def toggle_window_visibility(self):
+    def toggle_window_visibility(self) -> None:
         """Toggle the main window between visible and hidden states."""
         if self.isVisible():
             self.hide()
@@ -186,7 +186,7 @@ class MainWindow(QWidget):
             self.show()
             self.raise_()  # Bring to front
 
-    def quit_app(self):
+    def quit_app(self) -> None:
         """Quit the application, stopping any active worker and clearing chat."""
         # Stop any active worker
         if self.worker is not None:
@@ -198,7 +198,7 @@ class MainWindow(QWidget):
             app.quit()
 
     # Override mousePressEvent to automatically set focus to input field
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         """Handle mouse press events by setting focus to the input field.
 
         Args:
@@ -208,7 +208,7 @@ class MainWindow(QWidget):
         super().mousePressEvent(event)
 
     # Override paintEvent to draw app window
-    def paintEvent(self, _event):
+    def paintEvent(self, _event) -> None:
         """Paint the main window with rounded corners and a border."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)

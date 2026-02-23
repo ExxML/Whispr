@@ -11,7 +11,7 @@ class ScreenshotManager():
         self.screenshots_dir = os.path.join(base_dir, "src", "data", "cache", "screenshots")
         os.makedirs(self.screenshots_dir, exist_ok=True)  # Ensure the folder exists
 
-    def take_screenshot(self):
+    def take_screenshot(self) -> None:
         """Takes a screenshot of the primary screen and saves it to the screenshots directory."""
         try:
             filepath = os.path.join(self.screenshots_dir, "screenshot.png")

@@ -34,7 +34,7 @@ class SystemTray(QSystemTrayIcon):
 
         self.show()
     
-    def on_tray_activated(self, reason):
+    def on_tray_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
         """Handle system tray icon activation events.
 
         Args:
@@ -44,6 +44,6 @@ class SystemTray(QSystemTrayIcon):
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             self.main_window.toggle_window_visibility()
     
-    def quit_app(self):
+    def quit_app(self) -> None:
         """Quit the application via the main window."""
         self.main_window.quit_app()

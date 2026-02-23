@@ -26,7 +26,7 @@ class AIReceiver(QObject):
         self.finished.connect(self.on_response_ready)
         self.error.connect(self.on_response_error)
 
-    def handle_message(self, message, take_screenshot=False):
+    def handle_message(self, message: str, take_screenshot: bool = False) -> None:
         """Handle a user message by displaying it and starting AI generation.
 
         Args:
@@ -53,11 +53,11 @@ class AIReceiver(QObject):
         self._thread = threading.Thread(target=self.run, daemon=True)
         self._thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         """Signal the thread to stop."""
         self._stop_flag.set()
 
-    def is_stopped(self):
+    def is_stopped(self) -> bool:
         """Check if stop has been requested.
 
         Returns:
@@ -65,7 +65,7 @@ class AIReceiver(QObject):
         """
         return self._stop_flag.is_set()
 
-    def run(self):
+    def run(self) -> None:
         """Execute AI content generation and emit progress and completion signals."""
         try:
             if self._take_screenshot:
@@ -82,7 +82,7 @@ class AIReceiver(QObject):
             if not self.is_stopped():
                 self.error.emit(str(e))
 
-    def _on_chunk(self, text):
+    def _on_chunk(self, text: str) -> None:
         """Handle a streamed text chunk by emitting it to the UI thread.
 
         Args:
@@ -92,12 +92,12 @@ class AIReceiver(QObject):
         if text and not self.is_stopped():
             self.progress.emit(text)
 
-    def on_response_ready(self):
+    def on_response_ready(self) -> None:
         """Handle successful AI response."""
         # Finalize streaming bubble
         self.chat_area.finalize_assistant_stream()
 
-    def on_response_error(self, error):
+    def on_response_error(self, error: str) -> None:
         """Handle AI response error.
 
         Args:
@@ -109,7 +109,7 @@ class AIReceiver(QObject):
             self.chat_area.finalize_assistant_stream()
         self.chat_area.add_message(error_msg, is_user=False)
 
-    def on_response_chunk(self, chunk):
+    def on_response_chunk(self, chunk: str) -> None:
         """Stream chunk text into the current assistant bubble.
 
         Args:

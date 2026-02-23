@@ -87,7 +87,7 @@ class ShortcutManager(QObject):
 
     # Hotkey Definitions
 
-    def _define_hotkeys(self):
+    def _define_hotkeys(self) -> None:
         """Populate the hotkey lookup tables.
 
         Default Shortcuts:
@@ -122,7 +122,7 @@ class ShortcutManager(QObject):
 
     # Win32 Keyboard Hook Logic
 
-    def _low_level_keyboard_proc(self, nCode, wParam, lParam):
+    def _low_level_keyboard_proc(self, nCode: int, wParam: int, lParam: int) -> int:
         """Win32 low-level keyboard hook callback.
 
         Checks every key event against the registered hotkey tables.
@@ -178,7 +178,7 @@ class ShortcutManager(QObject):
 
         return user32.CallNextHookEx(self._hook_handle, nCode, wParam, lParam)
 
-    def _hook_thread_entry(self):
+    def _hook_thread_entry(self) -> None:
         """Entry point for the keyboard hook thread.
 
         Installs the low-level keyboard hook, then enters a message loop that
@@ -203,12 +203,12 @@ class ShortcutManager(QObject):
             user32.UnhookWindowsHookEx(self._hook_handle)
             self._hook_handle = None
 
-    def _start_hook(self):
+    def _start_hook(self) -> None:
         """Start the keyboard hook on a dedicated daemon thread"""
         thread = threading.Thread(target=self._hook_thread_entry, daemon=True)
         thread.start()
 
-    def stop_hook(self):
+    def stop_hook(self) -> None:
         """Stop the keyboard hook and its message loop"""
         if self._hook_thread_id is not None:
             user32.PostThreadMessageW(self._hook_thread_id, WM_QUIT, 0, 0)
@@ -216,11 +216,11 @@ class ShortcutManager(QObject):
 
     # Hotkey Callback Functions
 
-    def toggle_window_visibility(self):
+    def toggle_window_visibility(self) -> None:
         """Toggle main window visibility"""
         self.toggle_signal.emit()
 
-    def setup_movement_distances(self):
+    def setup_movement_distances(self) -> None:
         """Determine screen geometry and movement distances"""
         self.screen_rect = QApplication.primaryScreen().availableGeometry()
         self.max_move_distance_x = self.screen_rect.width() // 14
@@ -230,7 +230,7 @@ class ShortcutManager(QObject):
         self.animation_fps = 120  # Frames per second
         self.animation_frame_time = 1000 // self.animation_fps  # Time per frame in ms
 
-    def _start_animation(self, target_x, target_y):
+    def _start_animation(self, target_x: int, target_y: int) -> None:
         """Begin an animated move to the target position.
 
         Args:
@@ -243,7 +243,7 @@ class ShortcutManager(QObject):
         self.animation_active = True
         self.animation_timer.start(self.animation_frame_time)
 
-    def _animate_step(self):
+    def _animate_step(self) -> None:
         """Advance one frame of the movement animation"""
         self.animation_progress += self.animation_frame_time / self.animation_duration
 
@@ -259,14 +259,14 @@ class ShortcutManager(QObject):
             current_y = int(self.animation_start_pos.y() + (self.animation_target_pos.y() - self.animation_start_pos.y()) * ease_progress)
             self.main_window.move(current_x, current_y)
 
-    def move_window_left(self):
+    def move_window_left(self) -> None:
         """Move main window left"""
         if self.animation_active and self.animation_progress < 0.5:
             return
         new_x = max(self.screen_bounds_offset, self.main_window.geometry().x() - self.max_move_distance_x)
         self.move_signal.emit(new_x, self.main_window.geometry().y())
 
-    def move_window_right(self):
+    def move_window_right(self) -> None:
         """Move main window right"""
         if self.animation_active and self.animation_progress < 0.5:
             return
@@ -274,14 +274,14 @@ class ShortcutManager(QObject):
         new_x = min(max_x, self.main_window.geometry().x() + self.max_move_distance_x)
         self.move_signal.emit(new_x, self.main_window.geometry().y())
 
-    def move_window_up(self):
+    def move_window_up(self) -> None:
         """Move main window up"""
         if self.animation_active and self.animation_progress < 0.5:
             return
         new_y = max(self.screen_bounds_offset, self.main_window.geometry().y() - self.max_move_distance_y)
         self.move_signal.emit(self.main_window.geometry().x(), new_y)
 
-    def move_window_down(self):
+    def move_window_down(self) -> None:
         """Move main window down"""
         if self.animation_active and self.animation_progress < 0.5:
             return
@@ -289,31 +289,31 @@ class ShortcutManager(QObject):
         new_y = min(max_y, self.main_window.geometry().y() + self.max_move_distance_y)
         self.move_signal.emit(self.main_window.geometry().x(), new_y)
 
-    def scroll_up(self):
+    def scroll_up(self) -> None:
         """Scroll up in the chat area"""
         self.scroll_signal.emit(-100)
 
-    def scroll_down(self):
+    def scroll_down(self) -> None:
         """Scroll down in the chat area"""
         self.scroll_signal.emit(100)
 
-    def close_app(self):
+    def close_app(self) -> None:
         """Close the application"""
         self.quit_signal.emit()  # Must emit signal to run on main thread
 
-    def screenshot(self):
+    def screenshot(self) -> None:
         """Take a screenshot of the primary screen"""
         self.screenshot_signal.emit()
 
-    def minimize(self):
+    def minimize(self) -> None:
         """Minimize the main window"""
         self.minimize_signal.emit()
 
-    def clear_chat(self):
+    def clear_chat(self) -> None:
         """Clear the chat history"""
         self.clear_chat_signal.emit()
 
-    def generate_with_screenshot(self):
+    def generate_with_screenshot(self) -> None:
         """Automatically generate content with screenshot"""
         self.generate_content_with_screenshot_signal.emit(
 """Help me solve this programming problem. Be concise.
@@ -327,7 +327,7 @@ class ShortcutManager(QObject):
             True  # Take a screenshot
         )
 
-    def generate_with_screenshot_fix(self):
+    def generate_with_screenshot_fix(self) -> None:
         """Automatically generate content with screenshot for fixing/improving code"""
         self.generate_content_with_screenshot_signal.emit(
             "Fix or improve the code based on the new instructions. Then, state the changes you made.",

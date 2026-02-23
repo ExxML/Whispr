@@ -69,7 +69,7 @@ kernel32.GetModuleHandleW.argtypes = [ctypes.wintypes.LPCWSTR]
 kernel32.GetModuleHandleW.restype = ctypes.wintypes.HMODULE
 
 
-def get_active_modifiers():
+def get_active_modifiers() -> int:
     """Return a bitmask representing the currently held modifier keys.
 
     Returns:
