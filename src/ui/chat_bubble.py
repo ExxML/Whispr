@@ -2,7 +2,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QFontMetrics
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
-from ui.ai_formatter import AIFormatter
+from ui.ai_formatter import format_message
 
 
 class ChatBubble(QWidget):
@@ -82,4 +82,4 @@ class ChatBubble(QWidget):
             message (str): The raw bot message text to format and display.
         """
         self.message = message
-        self.message_label.setText(AIFormatter.format_message(message))
+        self.message_label.setText(format_message(message))
