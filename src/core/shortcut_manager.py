@@ -148,8 +148,11 @@ class ShortcutManager(QObject):
                             return 1  # Suppress the matching key-up
 
                 elif is_key_up:
-                    # Key was held but hotkey no longer matches (e.g. modifier changed) - clean up
+                    # Key was held but hotkey no longer matches (e.g. modifier released early) - clean up
                     self._held_vk_codes.discard(vk_code)
+                    if vk_code in self._suppressed_vk_codes:
+                        self._suppressed_vk_codes.discard(vk_code)
+                        return 1  # Suppress key-up even though modifiers changed
 
         return user32.CallNextHookEx(self._hook_handle, nCode, wParam, lParam)
 
