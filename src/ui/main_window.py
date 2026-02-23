@@ -70,7 +70,7 @@ class AIThread(QObject):
         if text and not self.is_stopped():
             self.progress.emit(text)
 
-class Overlay(QWidget):
+class MainWindow(QWidget):
     def __init__(self, ai_manager):
         super().__init__()
         self.initUI()
@@ -78,12 +78,12 @@ class Overlay(QWidget):
         self.worker = None
         
     def initUI(self):
-        """Initialize the overlay window UI layout and components."""
+        """Initialize the main window UI layout and components."""
         # Config variables
         self.window_width = 550
         self.window_height = 600
 
-        # Set window flags for overlay behavior
+        # Set window flags for main window behavior
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
             Qt.WindowType.WindowStaysOnTopHint |
@@ -98,7 +98,7 @@ class Overlay(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_SetCursor, False)
         self.unsetCursor()
         
-        # Window setup (position overlay at center-top on screen)
+        # Window setup (position main window at center-top on screen)
         screen_rect = QApplication.primaryScreen().availableGeometry()
         self.setGeometry((screen_rect.width() - self.window_width) // 2, 2, self.window_width, self.window_height)
         
@@ -171,20 +171,20 @@ class Overlay(QWidget):
         
         self.show()
         
-        # Set display affinity to exclude overlay from screen capture (Windows 10+)
+        # Set display affinity to exclude main window from screen capture (Windows 10+)
         hwnd = int(self.winId())
         WDA_EXCLUDEFROMCAPTURE = 0x00000011
         result = ctypes.windll.user32.SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)
         if result == 0:
             print("Warning: SetWindowDisplayAffinity failed. May appear in screenshots.")
         
-        # Setup timer to raise overlay so it is always visible (certain Windows operations override the stay on top hint)
+        # Setup timer to raise main window so it is always visible (certain Windows operations override the stay on top hint)
         self._visibility_timer = QTimer(self)
         self._visibility_timer.setInterval(1000)
         self._visibility_timer.timeout.connect(self.ensure_window_visible)
         self._visibility_timer.start()
 
-    # Set cursor as default texture regardless of where it is hovering on the overlay
+    # Set cursor as default texture regardless of where it is hovering on the main window
     def _unset_cursor_recursive(self, widget):
         """Recursively unset cursor for a widget and all its children.
 
@@ -198,7 +198,7 @@ class Overlay(QWidget):
             child.unsetCursor()
 
     def ensure_window_visible(self):
-        """Raise the overlay window if it is no longer the topmost window."""
+        """Raise the main window if it is no longer the topmost window."""
         try:
             if not self._is_topmost_window():
                 self.raise_()
@@ -206,10 +206,10 @@ class Overlay(QWidget):
             pass
 
     def _is_topmost_window(self):
-        """Check if the overlay window is the topmost window at its corner positions.
+        """Check if the main window is the topmost window at its corner positions.
 
         Returns:
-            bool: True if the overlay is topmost at all sampled points.
+            bool: True if the main window is topmost at all sampled points.
         """
         try:
             screen = QApplication.primaryScreen()
@@ -237,7 +237,7 @@ class Overlay(QWidget):
             return True
 
     def toggle_window_visibility(self):
-        """Toggle the overlay window between visible and hidden states."""
+        """Toggle the main window between visible and hidden states."""
         if self.isVisible():
             self.hide()
         else:
@@ -327,7 +327,7 @@ class Overlay(QWidget):
 
     # Override paintEvent to draw app window
     def paintEvent(self, event):
-        """Paint the overlay window with rounded corners and a border.
+        """Paint the main window with rounded corners and a border.
 
         Args:
             event (QPaintEvent): The paint event.

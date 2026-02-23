@@ -33,7 +33,7 @@ class ShortcutManager(QObject):
     Manages global keyboard shortcuts via a Win32 low-level keyboard hook.
     All registered hotkeys are suppressed so other applications never see the
     key events.  Conditional hotkeys (everything except the visibility toggle)
-    are only active while the overlay is visible.
+    are only active while the main window is visible.
     """
     # Qt signals for thread-safe communication with the main thread
     # ALL UI actions must be performed on the main thread to avoid crashes and unpredictable behaviour (ex. leaking hotkeys)
@@ -46,20 +46,20 @@ class ShortcutManager(QObject):
     toggle_signal = pyqtSignal()
     generate_content_with_screenshot_signal = pyqtSignal(str, bool)
 
-    def __init__(self, overlay, screenshot_manager):
+    def __init__(self, main_window, screenshot_manager):
         super().__init__()
-        self.overlay = overlay
+        self.main_window = main_window
         self.screenshot_manager = screenshot_manager
 
         # Connect signals
         self.move_signal.connect(self._start_animation)  # Signal needed because QTimers cannot be started from another thread
-        self.scroll_signal.connect(self.overlay.chat_area.shortcut_scroll)
-        self.quit_signal.connect(self.overlay.quit_app)
+        self.scroll_signal.connect(self.main_window.chat_area.shortcut_scroll)
+        self.quit_signal.connect(self.main_window.quit_app)
         self.screenshot_signal.connect(self.screenshot_manager.take_screenshot)
-        self.clear_chat_signal.connect(self.overlay.chat_area.clear_chat)
-        self.minimize_signal.connect(self.overlay.hide)
-        self.toggle_signal.connect(self.overlay.toggle_window_visibility)
-        self.generate_content_with_screenshot_signal.connect(self.overlay.handle_message)
+        self.clear_chat_signal.connect(self.main_window.chat_area.clear_chat)
+        self.minimize_signal.connect(self.main_window.hide)
+        self.toggle_signal.connect(self.main_window.toggle_window_visibility)
+        self.generate_content_with_screenshot_signal.connect(self.main_window.handle_message)
 
         # Initialize animation
         self.animation_timer = QTimer()
@@ -72,7 +72,7 @@ class ShortcutManager(QObject):
 
         # Hotkey lookup tables: (modifier_bitmask, vk_code) -> (callback, repeat_callbacks)
         self._always_active_hotkeys: dict[tuple[int, int], tuple[callable, bool]] = {}
-        self._overlay_hotkeys: dict[tuple[int, int], tuple[callable, bool]] = {}
+        self._main_window_hotkeys: dict[tuple[int, int], tuple[callable, bool]] = {}
         self._suppressed_vk_codes: set[int] = set()
         self._held_vk_codes: set[int] = set()  # Tracks physically held non-modifier keys
         self._define_hotkeys()
@@ -90,14 +90,14 @@ class ShortcutManager(QObject):
         Populate the hotkey lookup tables.
 
         Default Shortcuts:
-            Ctrl + E - Show / hide overlay (always active)
+            Ctrl + E - Show / hide main window (always active)
             Ctrl + D - Generate AI output (trigger on release)
             Ctrl + G - Fix / improve code (trigger on release)
-            Ctrl + Alt + <ArrowKeys> - Move overlay window
+            Ctrl + Alt + <ArrowKeys> - Move main window
             Ctrl + Shift + Up / Down - Scroll chat area
             Ctrl + Shift + Q - Quit the application
             Ctrl + Shift + C - Take a screenshot
-            Ctrl + Q - Minimize overlay
+            Ctrl + Q - Minimize main window
             Ctrl + N - Clear chat history
         """
         self._always_active_hotkeys = {
@@ -105,7 +105,7 @@ class ShortcutManager(QObject):
             (MOD_CTRL | MOD_SHIFT, ord('Q')): (self.close_app, False),
         }
 
-        self._overlay_hotkeys = {
+        self._main_window_hotkeys = {
             (MOD_CTRL | MOD_ALT, VK_LEFT): (self.move_window_left, True),
             (MOD_CTRL | MOD_ALT, VK_RIGHT): (self.move_window_right, True),
             (MOD_CTRL | MOD_ALT, VK_UP): (self.move_window_up, True),
@@ -146,10 +146,10 @@ class ShortcutManager(QObject):
                 modifiers = get_active_modifiers()
                 hotkey_key = (modifiers, vk_code)
 
-                # Look up in always-active table first, then overlay table
+                # Look up in always-active table first, then main window table
                 entry = self._always_active_hotkeys.get(hotkey_key)
-                if entry is None and self.overlay.isVisible():
-                    entry = self._overlay_hotkeys.get(hotkey_key)
+                if entry is None and self.main_window.isVisible():
+                    entry = self._main_window_hotkeys.get(hotkey_key)
 
                 if entry is not None:
                     callback, repeat_callbacks = entry
@@ -234,10 +234,10 @@ class ShortcutManager(QObject):
         """Begin an animated move to the target position.
 
         Args:
-            target_x (int): Target x-coordinate for the overlay window.
-            target_y (int): Target y-coordinate for the overlay window.
+            target_x (int): Target x-coordinate for the main window.
+            target_y (int): Target y-coordinate for the main window.
         """
-        self.animation_start_pos = self.overlay.pos()
+        self.animation_start_pos = self.main_window.pos()
         self.animation_target_pos = QPoint(target_x, target_y)
         self.animation_progress = 0.0
         self.animation_active = True
@@ -249,7 +249,7 @@ class ShortcutManager(QObject):
 
         if self.animation_progress >= 1.0:
             # Animation complete
-            self.overlay.move(self.animation_target_pos)
+            self.main_window.move(self.animation_target_pos)
             self.animation_timer.stop()
             self.animation_active = False
         else:
@@ -257,37 +257,37 @@ class ShortcutManager(QObject):
             ease_progress = math.sin(self.animation_progress * math.pi / 2)
             current_x = int(self.animation_start_pos.x() + (self.animation_target_pos.x() - self.animation_start_pos.x()) * ease_progress)
             current_y = int(self.animation_start_pos.y() + (self.animation_target_pos.y() - self.animation_start_pos.y()) * ease_progress)
-            self.overlay.move(current_x, current_y)
+            self.main_window.move(current_x, current_y)
 
     def move_window_left(self):
-        """Move overlay window left"""
+        """Move main window left"""
         if self.animation_active and self.animation_progress < 0.5:
             return
-        new_x = max(self.screen_bounds_offset, self.overlay.geometry().x() - self.max_move_distance_x)
-        self.move_signal.emit(new_x, self.overlay.geometry().y())
+        new_x = max(self.screen_bounds_offset, self.main_window.geometry().x() - self.max_move_distance_x)
+        self.move_signal.emit(new_x, self.main_window.geometry().y())
 
     def move_window_right(self):
-        """Move overlay window right"""
+        """Move main window right"""
         if self.animation_active and self.animation_progress < 0.5:
             return
-        max_x = self.screen_rect.width() - self.overlay.geometry().width() - self.screen_bounds_offset
-        new_x = min(max_x, self.overlay.geometry().x() + self.max_move_distance_x)
-        self.move_signal.emit(new_x, self.overlay.geometry().y())
+        max_x = self.screen_rect.width() - self.main_window.geometry().width() - self.screen_bounds_offset
+        new_x = min(max_x, self.main_window.geometry().x() + self.max_move_distance_x)
+        self.move_signal.emit(new_x, self.main_window.geometry().y())
 
     def move_window_up(self):
-        """Move overlay window up"""
+        """Move main window up"""
         if self.animation_active and self.animation_progress < 0.5:
             return
-        new_y = max(self.screen_bounds_offset, self.overlay.geometry().y() - self.max_move_distance_y)
-        self.move_signal.emit(self.overlay.geometry().x(), new_y)
+        new_y = max(self.screen_bounds_offset, self.main_window.geometry().y() - self.max_move_distance_y)
+        self.move_signal.emit(self.main_window.geometry().x(), new_y)
 
     def move_window_down(self):
-        """Move overlay window down"""
+        """Move main window down"""
         if self.animation_active and self.animation_progress < 0.5:
             return
-        max_y = self.screen_rect.height() - self.overlay.geometry().height() - self.screen_bounds_offset
-        new_y = min(max_y, self.overlay.geometry().y() + self.max_move_distance_y)
-        self.move_signal.emit(self.overlay.geometry().x(), new_y)
+        max_y = self.screen_rect.height() - self.main_window.geometry().height() - self.screen_bounds_offset
+        new_y = min(max_y, self.main_window.geometry().y() + self.max_move_distance_y)
+        self.move_signal.emit(self.main_window.geometry().x(), new_y)
 
     def scroll_up(self):
         """Scroll up in the chat area"""

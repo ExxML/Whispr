@@ -4,7 +4,7 @@ from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QMenu, QSystemTrayIcon
 
 class SystemTray(QSystemTrayIcon):
-    def __init__(self, overlay_window, shortcut_manager = None, parent = None):
+    def __init__(self, main_window, shortcut_manager = None, parent = None):
         # Set icon
         base_dir = os.getcwd()
         icon_path = os.path.join(base_dir, 'src', 'assets', 'blank.ico')
@@ -12,7 +12,7 @@ class SystemTray(QSystemTrayIcon):
         
         super().__init__(icon, parent)
         self.setToolTip('Whispr')
-        self.overlay_window = overlay_window
+        self.main_window = main_window
         self.shortcut_manager = shortcut_manager
 
         # Quit action
@@ -39,8 +39,8 @@ class SystemTray(QSystemTrayIcon):
         """
         # Show/Hide on left click
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
-            self.overlay_window.toggle_window_visibility()
+            self.main_window.toggle_window_visibility()
     
     def quit_app(self):
-        """Quit the application via the overlay window."""
-        self.overlay_window.quit_app()
+        """Quit the application via the main window."""
+        self.main_window.quit_app()
