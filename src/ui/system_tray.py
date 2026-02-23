@@ -2,11 +2,11 @@ from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QSystemTrayIcon, QMenu
 import os
 
-class SystemTrayIcon(QSystemTrayIcon):
+class SystemTray(QSystemTrayIcon):
     def __init__(self, overlay_window, shortcut_manager = None, parent = None):
         # Set icon
         base_dir = os.getcwd()
-        icon_path = os.path.join(base_dir, 'src', 'assets', 'Whispr.ico')
+        icon_path = os.path.join(base_dir, 'src', 'assets', 'blank.ico')
         icon = QIcon(icon_path)
         
         super().__init__(icon, parent)
@@ -14,17 +14,12 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.overlay_window = overlay_window
         self.shortcut_manager = shortcut_manager
 
-        # Toggle overlay visibility action
-        self.toggle_action = QAction("Show/Hide", self)
-        self.toggle_action.triggered.connect(self.shortcut_manager.toggle_overlay)
-        
         # Quit action
         quit_action = QAction("Quit", self)
         quit_action.triggered.connect(self.quit_app)
         
         # Add actions to menu
         self.menu = QMenu()
-        self.menu.addAction(self.toggle_action)
         self.menu.addAction(quit_action)
         
         # Set the context menu
