@@ -63,7 +63,7 @@ class MainWindow(QWidget):
         self.min_btn = QPushButton('–', self)
         self.min_btn.setFixedSize(36, 32)
         self.min_btn.clicked.connect(self.hide)
-        self.min_btn.setStyleSheet('''
+        self.min_btn.setStyleSheet("""
             QPushButton {
                 color: rgba(255, 255, 255, 0.3);
                 border: none;
@@ -77,11 +77,11 @@ class MainWindow(QWidget):
                 color: rgba(0, 0, 0, 0.6);
                 border-radius: 0px;
             }
-        ''')
+        """)
         self.close_btn = QPushButton('×', self)
         self.close_btn.setFixedSize(36, 32)
         self.close_btn.clicked.connect(self.quit_app)
-        self.close_btn.setStyleSheet('''
+        self.close_btn.setStyleSheet("""
             QPushButton {
                 color: rgba(255, 255, 255, 0.3);
                 border: none;
@@ -96,7 +96,7 @@ class MainWindow(QWidget):
                 border-radius: 0px;
                 border-top-right-radius: 8px;
             }
-        ''')
+        """)
         header_layout.addWidget(self.min_btn)
         header_layout.addWidget(self.close_btn)
         main_layout.addLayout(header_layout)

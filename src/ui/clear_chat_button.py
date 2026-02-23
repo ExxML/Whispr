@@ -20,7 +20,7 @@ class ClearChatButton(QPushButton):
         self.dark_icon_path = os.path.join(assets_dir, 'clear_chat_button_dark.png')
         self.setIcon(QIcon(self.light_icon_path))
         self.setIconSize(QSize(14, 14))
-        self.setStyleSheet('''
+        self.setStyleSheet("""
             QPushButton {
                 border: none;
             }
@@ -29,7 +29,7 @@ class ClearChatButton(QPushButton):
                 border-radius: 0px;
                 border-top-left-radius: 8px;
             }
-        ''')
+        """)
 
     # Override to change icon on hover
     def enterEvent(self, event):
