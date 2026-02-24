@@ -12,17 +12,16 @@ from ui.system_tray import SystemTray
 
 
 if __name__ == "__main__":
-    # Clear chat history on program start
-    base_dir = os.getcwd()
-    chat_history_path = os.path.join(base_dir, "src", "data", "chat_history.json")
-    with open(chat_history_path, "w") as f:
-        json.dump([], f)
-    
+    # Launch the application and its components
     app = QApplication(sys.argv)
     screenshot_manager = ScreenshotManager()
     ai_sender = AISender(screenshot_manager)
-    main_window = MainWindow(ai_sender)
+    main_window = MainWindow(ai_sender, screenshot_manager)
     shortcut_manager = ShortcutManager(main_window, screenshot_manager)
     tray_icon = SystemTray(main_window, shortcut_manager)
     
+    # Clear chat history and screenshots on program start
+    main_window.chat_area.clear_chat()
+    screenshot_manager.clear_screenshots()
+
     sys.exit(app.exec())

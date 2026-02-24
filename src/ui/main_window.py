@@ -14,9 +14,10 @@ from core.ai_receiver import AIReceiver
 class MainWindow(QWidget):
     """Main application window containing the chat area, input bar, and title bar buttons."""
 
-    def __init__(self, ai_sender):
+    def __init__(self, ai_sender, screenshot_manager):
         super().__init__()
         self.initUI()
+        self.screenshot_manager = screenshot_manager
         self.worker = AIReceiver(ai_sender, self.chat_area)
         
     def initUI(self) -> None:
@@ -56,7 +57,11 @@ class MainWindow(QWidget):
         self.input_bar = InputBar(self)
 
         # Create and add title bar buttons
-        self.clear_chat_button = ClearChatButton(self, self.chat_area.clear_chat, self.chat_area)
+        self.clear_chat_button = ClearChatButton(
+            self,
+            lambda: (self.chat_area.clear_chat(), self.screenshot_manager.clear_screenshots()),
+            self.chat_area,
+        )
         header_layout = QHBoxLayout()
         header_layout.addWidget(self.clear_chat_button)
         header_layout.addStretch(1)
@@ -191,8 +196,9 @@ class MainWindow(QWidget):
         # Stop any active worker
         if self.worker is not None:
             self.worker.stop()
-        
+
         self.chat_area.clear_chat()
+        self.screenshot_manager.clear_screenshots()
         app = QApplication.instance()
         if app is not None:
             app.quit()

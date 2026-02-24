@@ -62,12 +62,8 @@ class AISender():
         Returns:
             str: The full generated response text.
         """
-        # Take screenshot
-        self.screenshot_manager.take_screenshot()
-
-        # Read the screenshot
-        base_dir = os.getcwd()
-        screenshot_path = os.path.join(base_dir, "src", "data", "cache", "screenshots", "screenshot.png")
+        # Take screenshot and read it
+        screenshot_path = self.screenshot_manager.take_screenshot()
         with open(screenshot_path, "rb") as f:
             image_bytes = f.read()
 
