@@ -73,16 +73,16 @@ class ShortcutManager(QObject):
         self._setup_movement_distances()
 
         # Hotkey lookup tables: (modifier_bitmask, vk_code) -> (callback, repeat_callbacks)
-        self._always_active_hotkeys: dict[tuple[int, int], tuple[callable, bool]] = {}
-        self._main_window_hotkeys: dict[tuple[int, int], tuple[callable, bool]] = {}
-        self._suppressed_vk_codes: set[int] = set()
-        self._held_vk_codes: set[int] = set()  # Tracks physically held non-modifier keys
+        self.always_active_hotkeys: dict[tuple[int, int], tuple[callable, bool]] = {}
+        self.main_window_hotkeys: dict[tuple[int, int], tuple[callable, bool]] = {}
+        self.suppressed_vk_codes: set[int] = set()
+        self.held_vk_codes: set[int] = set()  # Tracks physically held non-modifier keys
         self._set_hotkeys()
 
         # Low-level keyboard hook (prevent GC of the callback reference)
-        self._hook_proc_ref = HOOKPROC(self._low_level_keyboard_proc)
-        self._hook_handle = None
-        self._hook_thread_id = None
+        self.hook_proc_ref = HOOKPROC(self._low_level_keyboard_proc)
+        self.hook_handle = None
+        self.hook_thread_id = None
         self._start_hook()
 
     def _set_hotkeys(self) -> None:
@@ -99,12 +99,12 @@ class ShortcutManager(QObject):
             Ctrl + Q - Minimize main window
             Ctrl + Shift + Q - Quit the application
         """
-        self._always_active_hotkeys = {
+        self.always_active_hotkeys = {
             (MOD_CTRL, ord("E")): (self._toggle_window_visibility, False),
             (MOD_CTRL | MOD_SHIFT, ord("Q")): (self._close_app, False),
         }
 
-        self._main_window_hotkeys = {
+        self.main_window_hotkeys = {
             (MOD_CTRL | MOD_ALT, VK_LEFT): (self._move_window_left, True),
             (MOD_CTRL | MOD_ALT, VK_RIGHT): (self._move_window_right, True),
             (MOD_CTRL | MOD_ALT, VK_UP): (self._move_window_up, True),
@@ -146,35 +146,35 @@ class ShortcutManager(QObject):
                 hotkey_key = (modifiers, vk_code)
 
                 # Look up in always-active table first, then main window table
-                entry = self._always_active_hotkeys.get(hotkey_key)
+                entry = self.always_active_hotkeys.get(hotkey_key)
                 if entry is None and self.main_window.isVisible():
-                    entry = self._main_window_hotkeys.get(hotkey_key)
+                    entry = self.main_window_hotkeys.get(hotkey_key)
 
                 if entry is not None:
                     callback, repeat_callbacks = entry
                     if is_key_down:
                         # For no-repeat hotkeys, skip if the key is already physically held
-                        if not repeat_callbacks and vk_code in self._held_vk_codes:
+                        if not repeat_callbacks and vk_code in self.held_vk_codes:
                             return 1  # Suppress repeat without calling callback
-                        self._held_vk_codes.add(vk_code)
-                        self._suppressed_vk_codes.add(vk_code)
+                        self.held_vk_codes.add(vk_code)
+                        self.suppressed_vk_codes.add(vk_code)
                         callback()
                         return 1  # Suppress the key event
 
                     if is_key_up:
-                        self._held_vk_codes.discard(vk_code)
-                        if vk_code in self._suppressed_vk_codes:
-                            self._suppressed_vk_codes.discard(vk_code)
+                        self.held_vk_codes.discard(vk_code)
+                        if vk_code in self.suppressed_vk_codes:
+                            self.suppressed_vk_codes.discard(vk_code)
                             return 1  # Suppress the matching key-up
 
                 elif is_key_up:
                     # Key was held but hotkey no longer matches (e.g. modifier released early) - clean up
-                    self._held_vk_codes.discard(vk_code)
-                    if vk_code in self._suppressed_vk_codes:
-                        self._suppressed_vk_codes.discard(vk_code)
+                    self.held_vk_codes.discard(vk_code)
+                    if vk_code in self.suppressed_vk_codes:
+                        self.suppressed_vk_codes.discard(vk_code)
                         return 1  # Suppress key-up even though modifiers changed
 
-        return user32.CallNextHookEx(self._hook_handle, nCode, wParam, lParam)
+        return user32.CallNextHookEx(self.hook_handle, nCode, wParam, lParam)
 
     def _hook_thread_entry(self) -> None:
         """Entry point for the keyboard hook thread.
@@ -182,12 +182,12 @@ class ShortcutManager(QObject):
         Installs the low-level keyboard hook, then enters a message loop that
         keeps the hook alive until a WM_QUIT message is posted.
         """
-        self._hook_thread_id = kernel32.GetCurrentThreadId()
+        self.hook_thread_id = kernel32.GetCurrentThreadId()
         h_module = kernel32.GetModuleHandleW(None)
 
-        self._hook_handle = user32.SetWindowsHookExW(
+        self.hook_handle = user32.SetWindowsHookExW(
             WH_KEYBOARD_LL,
-            self._hook_proc_ref,
+            self.hook_proc_ref,
             h_module,
             0,  # Monitor all threads (required for low-level hooks)
         )
@@ -197,20 +197,20 @@ class ShortcutManager(QObject):
         while user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:
             pass  # No dispatch needed; WM_QUIT causes GetMessageW to return 0
 
-        if self._hook_handle:
-            user32.UnhookWindowsHookEx(self._hook_handle)
-            self._hook_handle = None
+        if self.hook_handle:
+            user32.UnhookWindowsHookEx(self.hook_handle)
+            self.hook_handle = None
 
     def _start_hook(self) -> None:
         """Start the keyboard hook on a dedicated daemon thread"""
-        thread = threading.Thread(target=self._hook_thread_entry, daemon=True)
-        thread.start()
+        hook_thread = threading.Thread(target=self._hook_thread_entry, daemon=True)
+        hook_thread.start()
 
     def _stop_hook(self) -> None:
         """Stop the keyboard hook and its message loop"""
-        if self._hook_thread_id is not None:
-            user32.PostThreadMessageW(self._hook_thread_id, WM_QUIT, 0, 0)
-            self._hook_thread_id = None
+        if self.hook_thread_id is not None:
+            user32.PostThreadMessageW(self.hook_thread_id, WM_QUIT, 0, 0)
+            self.hook_thread_id = None
 
     # Hotkey Callback Functions
 

@@ -126,10 +126,10 @@ class MainWindow(QWidget):
             print("Warning: SetWindowDisplayAffinity failed. May appear in screenshots.")
         
         # Setup timer to raise main window so it is always visible (certain Windows operations override the stay on top hint)
-        self._visibility_timer = QTimer(self)
-        self._visibility_timer.setInterval(1000)
-        self._visibility_timer.timeout.connect(self._ensure_window_visible)
-        self._visibility_timer.start()
+        self.visibility_timer = QTimer(self)
+        self.visibility_timer.setInterval(1000)
+        self.visibility_timer.timeout.connect(self._ensure_window_visible)
+        self.visibility_timer.start()
 
     # Set cursor as default texture regardless of where it is hovering on the main window
     def _unset_cursor_recursive(self, widget: QWidget) -> None:

@@ -16,10 +16,10 @@ class AIReceiver(QObject):
         super().__init__()
         self.ai_sender = ai_sender
         self.chat_area = chat_area
-        self._thread = None
-        self._stop_flag = threading.Event()  # Stop flag in case a new user message is sent while a bot message is being streamed
-        self._message = None
-        self._attachments: list[str] | None = None
+        self.ai_thread = None
+        self.stop_flag = threading.Event()  # Stop flag in case a new user message is sent while a bot message is being streamed
+        self.message = None
+        self.attachments: list[str] | None = None
 
         # Connect signals to response handlers once
         self.progress.connect(self._on_response_chunk)
@@ -34,28 +34,28 @@ class AIReceiver(QObject):
             attachments (list[str], optional): List of file paths to attach to the request.
         """
         # If there's an active thread, stop it
-        if self._thread is not None and self._thread.is_alive():
-            self._stop_flag.set()
+        if self.ai_thread is not None and self.ai_thread.is_alive():
+            self.stop_flag.set()
 
             # Finalize the interrupted stream
-            if self.chat_area._streaming_bubble is not None:
+            if self.chat_area.streaming_bubble is not None:
                 self.chat_area.finalize_assistant_stream()
 
         # Reset stop flag for new message
-        self._stop_flag = threading.Event()
-        self._message = message
-        self._attachments = attachments
+        self.stop_flag = threading.Event()
+        self.message = message
+        self.attachments = attachments
 
         # Immediately add user's message to the chat area
         self.chat_area.add_message(message, is_user=True)
 
         # Start new thread
-        self._thread = threading.Thread(target=self._run, daemon=True)
-        self._thread.start()
+        self.ai_thread = threading.Thread(target=self._run, daemon=True)
+        self.ai_thread.start()
 
     def stop(self) -> None:
         """Signal the thread to stop."""
-        self._stop_flag.set()
+        self.stop_flag.set()
 
     def _is_stopped(self) -> bool:
         """Check if stop has been requested.
@@ -63,13 +63,13 @@ class AIReceiver(QObject):
         Returns:
             bool: True if the thread has been signaled to stop.
         """
-        return self._stop_flag.is_set()
+        return self.stop_flag.is_set()
 
     def _run(self) -> None:
         """Execute AI content generation and emit progress and completion signals."""
         try:
             response = self.ai_sender.generate_content_stream(
-                self._message, self._attachments, self._on_chunk,
+                self.message, self.attachments, self._on_chunk,
             )
             # Only emit finished if we weren't stopped
             if not self._is_stopped():
@@ -103,7 +103,7 @@ class AIReceiver(QObject):
         """
         error_msg = f"Error generating response: {error}"
         # Finalize any in-progress stream, then add error as a separate message
-        if self.chat_area._streaming_bubble is not None:
+        if self.chat_area.streaming_bubble is not None:
             self.chat_area.finalize_assistant_stream()
         self.chat_area.add_message(error_msg, is_user=False)
 
@@ -114,6 +114,6 @@ class AIReceiver(QObject):
             chunk (str): Text chunk from the AI response stream.
         """
         # Lazily create the assistant bubble only when first chunk arrives
-        if self.chat_area._streaming_bubble is None:
+        if self.chat_area.streaming_bubble is None:
             self.chat_area.start_assistant_stream()
         self.chat_area.append_to_stream(chunk)

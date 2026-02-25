@@ -16,8 +16,8 @@ class ChatArea(QScrollArea):
         self._init_scroll_animation()
         base_dir = os.getcwd()
         self.chat_history_path = os.path.join(base_dir, "src", "data", "chat_history.json")
-        self._streaming_bubble = None
-        self._streaming_text = ""
+        self.streaming_bubble = None
+        self.streaming_text = ""
         
     def _initUI(self) -> None:
         """Initialize the chat area UI layout, scroll settings, and styling."""
@@ -65,8 +65,8 @@ class ChatArea(QScrollArea):
     
     def _init_scroll_animation(self) -> None:
         """Initialize smooth scrolling animation"""
-        self._scroll_anim = QPropertyAnimation(self.verticalScrollBar(), b"value", self)
-        self._scroll_anim.setEasingCurve(QEasingCurve.Type.OutQuad)
+        self.scroll_animation = QPropertyAnimation(self.verticalScrollBar(), b"value", self)
+        self.scroll_animation.setEasingCurve(QEasingCurve.Type.OutQuad)
     
     def add_message(self, message: str, is_user: bool) -> None:
         """Add a new message to the chat area.
@@ -90,17 +90,17 @@ class ChatArea(QScrollArea):
 
         # Force scroll to bottom after a delay
         if is_user:
-            QTimer.singleShot(400, lambda: self._animate_to(self.verticalScrollBar().maximum() - 10, 100))
+            QTimer.singleShot(400, lambda: self._animate_to(self.verticalScrollBar().maximum(), 100))
     
     def start_assistant_stream(self) -> None:
         """Create an assistant bubble to stream content into (not saved until finalized)."""
-        if self._streaming_bubble is not None:
+        if self.streaming_bubble is not None:
             return
         # Remove stretch, add empty assistant bubble, then add stretch back
         self.chat_layout.takeAt(self.chat_layout.count() - 1)
-        self._streaming_bubble = ChatBubble("", is_user=False)
-        self._streaming_text = ""
-        self.chat_layout.addWidget(self._streaming_bubble)
+        self.streaming_bubble = ChatBubble("", is_user=False)
+        self.streaming_text = ""
+        self.chat_layout.addWidget(self.streaming_bubble)
         self.chat_layout.addStretch()
     
     def append_to_stream(self, chunk_text: str) -> None:
@@ -109,20 +109,20 @@ class ChatArea(QScrollArea):
         Args:
             chunk_text (str): The text chunk to append to the stream.
         """
-        if self._streaming_bubble is None:
+        if self.streaming_bubble is None:
             return
-        self._streaming_text += chunk_text
-        self._streaming_bubble.set_bot_message(self._streaming_text)
+        self.streaming_text += chunk_text
+        self.streaming_bubble.set_bot_message(self.streaming_text)
     
     def finalize_assistant_stream(self) -> None:
         """Persist the streamed assistant message and clear streaming state."""
-        if self._streaming_bubble is None:
+        if self.streaming_bubble is None:
             return
         # Save final message
-        self._save_message(self._streaming_text, is_user=False)
+        self._save_message(self.streaming_text, is_user=False)
         # Clear streaming state
-        self._streaming_bubble = None
-        self._streaming_text = ""
+        self.streaming_bubble = None
+        self.streaming_text = ""
         
     def _save_message(self, message: str, is_user: bool) -> None:
         """Save a message to chat_history.json.
@@ -175,7 +175,7 @@ class ChatArea(QScrollArea):
             target (int): The target scroll position.
             duration (int): The animation duration in milliseconds.
         """
-        anim = self._scroll_anim
+        anim = self.scroll_animation
         if anim.state() == QAbstractAnimation.State.Running:
             anim.stop()
         sb = self.verticalScrollBar()

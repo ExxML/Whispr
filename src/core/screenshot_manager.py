@@ -11,8 +11,8 @@ class ScreenshotManager():
         base_dir = os.getcwd()
         self.screenshots_dir = os.path.join(base_dir, "src", "data", "cache", "screenshots")
         os.makedirs(self.screenshots_dir, exist_ok=True)  # Ensure the folder exists
-        self._screenshot_count = 0
-        self._pending_paths: list[str] = []
+        self.screenshot_count = 0
+        self.pending_paths: list[str] = []
 
     def take_screenshot(self) -> str:
         """Take a screenshot of the primary screen and save it to the screenshots directory.
@@ -21,7 +21,7 @@ class ScreenshotManager():
             str: The filepath of the saved screenshot, or an empty string on failure.
         """
         try:
-            filename = f"screenshot{self._screenshot_count}.png"
+            filename = f"screenshot{self.screenshot_count}.png"
             filepath = os.path.join(self.screenshots_dir, filename)
 
             # Create a new mss instance for each call (thread-safe)
@@ -31,8 +31,8 @@ class ScreenshotManager():
                 screenshot = sct.grab(monitor)
                 mss.tools.to_png(screenshot.rgb, screenshot.size, output=str(filepath))
 
-            self._screenshot_count += 1
-            self._pending_paths.append(filepath)
+            self.screenshot_count += 1
+            self.pending_paths.append(filepath)
             return filepath
 
         except Exception as e:
@@ -45,13 +45,13 @@ class ScreenshotManager():
         Returns:
             list[str]: The list of pending screenshot file paths.
         """
-        paths = self._pending_paths.copy()
-        self._pending_paths.clear()
+        paths = self.pending_paths.copy()
+        self.pending_paths.clear()
         return paths
 
     def clear_screenshots(self) -> None:
         """Delete all screenshots from the screenshots directory and reset the counter."""
-        self._pending_paths.clear()
+        self.pending_paths.clear()
 
         try:
             pattern = os.path.join(self.screenshots_dir, "screenshot*.png")
@@ -60,4 +60,4 @@ class ScreenshotManager():
         except Exception as e:
             print(f"Error clearing screenshots: {str(e)}")
 
-        self._screenshot_count = 0
+        self.screenshot_count = 0
