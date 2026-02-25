@@ -77,7 +77,7 @@ class ShortcutManager(QObject):
         self._main_window_hotkeys: dict[tuple[int, int], tuple[callable, bool]] = {}
         self._suppressed_vk_codes: set[int] = set()
         self._held_vk_codes: set[int] = set()  # Tracks physically held non-modifier keys
-        self._define_hotkeys()
+        self._set_hotkeys()
 
         # Low-level keyboard hook (prevent GC of the callback reference)
         self._hook_proc_ref = HOOKPROC(self._low_level_keyboard_proc)
@@ -85,9 +85,7 @@ class ShortcutManager(QObject):
         self._hook_thread_id = None
         self._start_hook()
 
-    # Hotkey Definitions
-
-    def _define_hotkeys(self) -> None:
+    def _set_hotkeys(self) -> None:
         """Populate the hotkey lookup tables.
 
         Default Shortcuts:
@@ -96,10 +94,10 @@ class ShortcutManager(QObject):
             Ctrl + G - Fix / improve code (trigger on release)
             Ctrl + Alt + <ArrowKeys> - Move main window
             Ctrl + Shift + Up / Down - Scroll chat area
-            Ctrl + Shift + Q - Quit the application
-            Ctrl + Shift + C - Take a screenshot
-            Ctrl + Q - Minimize main window
+            Ctrl + Shift + S - Take a screenshot
             Ctrl + N - Clear chat history
+            Ctrl + Q - Minimize main window
+            Ctrl + Shift + Q - Quit the application
         """
         self._always_active_hotkeys = {
             (MOD_CTRL, ord("E")): (self.toggle_window_visibility, False),
@@ -113,7 +111,7 @@ class ShortcutManager(QObject):
             (MOD_CTRL | MOD_ALT, VK_DOWN): (self.move_window_down, True),
             (MOD_CTRL | MOD_SHIFT, VK_UP): (self.scroll_up, True),
             (MOD_CTRL | MOD_SHIFT, VK_DOWN): (self.scroll_down, True),
-            (MOD_CTRL | MOD_SHIFT, ord("C")): (self.screenshot, False),
+            (MOD_CTRL | MOD_SHIFT, ord("S")): (self.screenshot, False),
             (MOD_CTRL, ord("Q")): (self.minimize, False),
             (MOD_CTRL, ord("N")): (self.clear_chat, False),
             (MOD_CTRL, ord("D")): (self.generate_with_screenshot, False),
