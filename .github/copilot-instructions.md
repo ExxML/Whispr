@@ -114,7 +114,7 @@ def process(a: int, b: int) -> None:
 | Functions / methods | `snake_case` | `take_screenshot`, `handle_message` |
 | Variables | `snake_case` | `full_response`, `chat_history_path` |
 | Constants | `UPPER_SNAKE_CASE` | `WH_KEYBOARD_LL`, `MOD_CTRL`, `VK_SHIFT` |
-| Private methods / vars | Single underscore prefix | `_define_hotkeys`, `_streaming_bubble` |
+| Private methods | Single underscore prefix | `_initUI`, `_on_response_chunk` |
 | Qt signals | `snake_case`, no underscore | `message_sent`, `move_signal`, `finished` |
 | Event handler methods | `on_` prefix | `on_response_ready`, `on_tray_activated` |
 
