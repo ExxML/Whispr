@@ -15,7 +15,7 @@ if __name__ == "__main__":
     # Launch the application and its components
     app = QApplication(sys.argv)
     screenshot_manager = ScreenshotManager()
-    ai_sender = AISender(screenshot_manager)
+    ai_sender = AISender()
     main_window = MainWindow(ai_sender, screenshot_manager)
     shortcut_manager = ShortcutManager(main_window, screenshot_manager)
     tray_icon = SystemTray(main_window, shortcut_manager)

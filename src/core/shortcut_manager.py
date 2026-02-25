@@ -46,7 +46,7 @@ class ShortcutManager(QObject):
     clear_chat_signal = pyqtSignal()
     minimize_signal = pyqtSignal()
     toggle_signal = pyqtSignal()
-    generate_content_with_screenshot_signal = pyqtSignal(str, bool)
+    send_message_signal = pyqtSignal(str)
 
     def __init__(self, main_window, screenshot_manager):
         super().__init__()
@@ -61,7 +61,7 @@ class ShortcutManager(QObject):
         self.clear_chat_signal.connect(self.main_window.chat_area.clear_chat)
         self.minimize_signal.connect(self.main_window.hide)
         self.toggle_signal.connect(self.main_window.toggle_window_visibility)
-        self.generate_content_with_screenshot_signal.connect(self.main_window.worker.handle_message)
+        self.send_message_signal.connect(self.main_window._send_message)
 
         # Initialize animation
         self.animation_timer = QTimer()
@@ -312,8 +312,9 @@ class ShortcutManager(QObject):
         self.clear_chat_signal.emit()
 
     def generate_with_screenshot(self) -> None:
-        """Automatically generate content with screenshot"""
-        self.generate_content_with_screenshot_signal.emit(
+        """Take a screenshot then automatically generate content."""
+        self.screenshot_manager.take_screenshot()
+        self.send_message_signal.emit(
 """Help me solve this programming problem. Be concise.
 1. Give me 5 clarification questions to ask about the problem.
 2. State the type of problem (ex. Arrays & Hashing, Two Pointers, Sliding Window, Stack, Binary Search, Linked List, Trees, Heap / Priority Queue, Backtracking, Tries, Graphs, Advanced Graphs, 1-D Dynamic Programming, 2-D Dynamic Programming, Greedy, Intervals, Math & Geometry, and/or Bit Manipulation), data structure(s), what each element in the data structure means, and algorithm(s) used to solve this problem.
@@ -321,13 +322,12 @@ class ShortcutManager(QObject):
 4. Give me a short example walkthrough using your solution.
 5. Give me a code block with the solution in Python, supplied with comments.
 6. Give me a concise explanation of the solution.
-7. Give me the time and space complexity for the solution.""",
-            True  # Take a screenshot
+7. Give me the time and space complexity for the solution."""
         )
 
     def generate_with_screenshot_fix(self) -> None:
-        """Automatically generate content with screenshot for fixing/improving code"""
-        self.generate_content_with_screenshot_signal.emit(
-            "Fix or improve the code based on the new instructions. Then, state the changes you made.",
-            True  # Take a screenshot
+        """Take a screenshot then automatically generate content to fix or improve code."""
+        self.screenshot_manager.take_screenshot()
+        self.send_message_signal.emit(
+            "Fix or improve the code based on the new instructions. Then, state the changes you made."
         )

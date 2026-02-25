@@ -1,3 +1,4 @@
+import mimetypes
 import os
 from pathlib import Path
 from typing import Callable
@@ -10,74 +11,45 @@ from google.genai import types
 class AISender():
     """Handles sending user input to Gemini."""
 
-    def __init__(self, screenshot_manager):
+    def __init__(self):
         # Load environment variables from the .env file
         base_dir = Path(__file__).resolve().parent.parent.parent
         load_dotenv(base_dir / ".env")
-        
+
         # Initialize Gemini client
         self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-        
-        self.screenshot_manager = screenshot_manager
 
-    def generate_content(self, user_input: str, on_chunk: Callable[[str], None] | None = None) -> str:
-        """Generate AI content by streaming from the Gemini model.
+    def generate_content_stream(
+        self,
+        user_input: str,
+        attachments: list[str] | None = None,
+        on_chunk: Callable[[str], None] | None = None
+    ) -> str:
+        """Generate and stream AI content with attachments, if any.
 
         Args:
             user_input (str): The user's input text to send to the model.
+            attachments (list[str], optional): List of file paths to attach to the request.
             on_chunk (callable, optional): Callback invoked with each text chunk as it streams.
 
         Returns:
             str: The full generated response text.
         """
-        full_response = ""
-        # Stream generation
-        for chunk in self.client.models.generate_content_stream(
-            model="gemini-2.5-flash",
-            contents=[
-                user_input
-            ],
-            config=types.GenerateContentConfig(
-                thinking_config=types.ThinkingConfig(thinking_budget=0)  # Disables thinking
-            ),
-        ):
-            if chunk.text:
-                full_response += chunk.text
-                print(chunk.text, end="", flush=True)
-                if on_chunk is not None:
-                    try:
-                        on_chunk(chunk.text)
-                    except Exception:
-                        pass
-
-        return full_response
-
-    def generate_content_with_screenshot(self, user_input: str, on_chunk: Callable[[str], None] | None = None) -> str:
-        """Generate AI content with a screenshot of the primary screen.
-
-        Args:
-            user_input (str): The user's input text to send to the model.
-            on_chunk (callable, optional): Callback invoked with each text chunk as it streams.
-
-        Returns:
-            str: The full generated response text.
-        """
-        # Take screenshot and read it
-        screenshot_path = self.screenshot_manager.take_screenshot()
-        with open(screenshot_path, "rb") as f:
-            image_bytes = f.read()
+        # Build content parts from attachments
+        contents: list[types.Part | str] = []
+        for filepath in attachments or []:
+            mime_type = mimetypes.guess_type(filepath)[0] or "application/octet-stream"
+            with open(filepath, "rb") as f:
+                contents.append(
+                    types.Part.from_bytes(data=f.read(), mime_type=mime_type)
+                )
+        contents.append(user_input)
 
         full_response = ""
         # Stream generation
         for chunk in self.client.models.generate_content_stream(
             model="gemini-2.5-flash",
-            contents=[
-                types.Part.from_bytes(
-                    data=image_bytes,
-                    mime_type="image/png"
-                ),
-                user_input
-            ],
+            contents=contents,
             config=types.GenerateContentConfig(
                 thinking_config=types.ThinkingConfig(thinking_budget=0)  # Disables thinking
             ),

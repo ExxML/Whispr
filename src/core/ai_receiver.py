@@ -17,21 +17,21 @@ class AIReceiver(QObject):
         self.ai_sender = ai_sender
         self.chat_area = chat_area
         self._thread = None
-        self._stop_flag = threading.Event() # Stop flag in case a new user message is sent while a bot message is being streamed
+        self._stop_flag = threading.Event()  # Stop flag in case a new user message is sent while a bot message is being streamed
         self._message = None
-        self._take_screenshot = False
+        self._attachments: list[str] | None = None
 
         # Connect signals to response handlers once
         self.progress.connect(self.on_response_chunk)
         self.finished.connect(self.on_response_ready)
         self.error.connect(self.on_response_error)
 
-    def handle_message(self, message: str, take_screenshot: bool = False) -> None:
+    def handle_message(self, message: str, attachments: list[str] | None = None) -> None:
         """Handle a user message by displaying it and starting AI generation.
 
         Args:
             message (str): The user's message text.
-            take_screenshot (bool): Whether to include a screenshot with the request.
+            attachments (list[str], optional): List of file paths to attach to the request.
         """
         # If there's an active thread, stop it
         if self._thread is not None and self._thread.is_alive():
@@ -44,7 +44,7 @@ class AIReceiver(QObject):
         # Reset stop flag for new message
         self._stop_flag = threading.Event()
         self._message = message
-        self._take_screenshot = take_screenshot
+        self._attachments = attachments
 
         # Immediately add user's message to the chat area
         self.chat_area.add_message(message, is_user=True)
@@ -68,11 +68,9 @@ class AIReceiver(QObject):
     def run(self) -> None:
         """Execute AI content generation and emit progress and completion signals."""
         try:
-            if self._take_screenshot:
-                response = self.ai_sender.generate_content_with_screenshot(self._message, self._on_chunk)
-            else:
-                response = self.ai_sender.generate_content(self._message, self._on_chunk)
-
+            response = self.ai_sender.generate_content_stream(
+                self._message, self._attachments, self._on_chunk,
+            )
             # Only emit finished if we weren't stopped
             if not self.is_stopped():
                 self.finished.emit(response)

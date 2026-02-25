@@ -110,7 +110,7 @@ class MainWindow(QWidget):
         main_layout.addWidget(self.chat_area, stretch=1)
 
         # Add input bar
-        self.input_bar.message_sent.connect(lambda msg: self.worker.handle_message(msg, take_screenshot=False))
+        self.input_bar.message_sent.connect(self._send_message)
         main_layout.addWidget(self.input_bar)
 
         # Unset cursor for all child widgets to preserve system cursor
@@ -190,6 +190,15 @@ class MainWindow(QWidget):
         else:
             self.show()
             self.raise_()  # Bring to front
+
+    def _send_message(self, message: str) -> None:
+        """Send a user message with any pending screenshot attachments.
+
+        Args:
+            message (str): The user's message text.
+        """
+        attachments = self.screenshot_manager.get_and_clear_pending()
+        self.worker.handle_message(message, attachments or None)
 
     def quit_app(self) -> None:
         """Quit the application, stopping any active worker and clearing chat."""
