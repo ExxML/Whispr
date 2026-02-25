@@ -12,9 +12,9 @@ class ChatBubble(QWidget):
         super().__init__()
         self.message = message
         self.is_user = is_user
-        self.initUI()
+        self._initUI()
     
-    def initUI(self) -> None:
+    def _initUI(self) -> None:
         """Initialize the chat bubble UI layout and styling."""
         layout = QHBoxLayout(self)
         layout.setContentsMargins(10, 5, 10, 5)

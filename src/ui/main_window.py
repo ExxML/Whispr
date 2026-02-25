@@ -16,11 +16,11 @@ class MainWindow(QWidget):
 
     def __init__(self, ai_sender, screenshot_manager):
         super().__init__()
-        self.initUI()
+        self._initUI()
         self.screenshot_manager = screenshot_manager
         self.worker = AIReceiver(ai_sender, self.chat_area)
         
-    def initUI(self) -> None:
+    def _initUI(self) -> None:
         """Initialize the main window UI layout and components."""
         # Config variables
         self.window_width = 550
@@ -110,7 +110,7 @@ class MainWindow(QWidget):
         main_layout.addWidget(self.chat_area, stretch=1)
 
         # Add input bar
-        self.input_bar.message_sent.connect(self._send_message)
+        self.input_bar.message_sent.connect(self.send_message)
         main_layout.addWidget(self.input_bar)
 
         # Unset cursor for all child widgets to preserve system cursor
@@ -128,7 +128,7 @@ class MainWindow(QWidget):
         # Setup timer to raise main window so it is always visible (certain Windows operations override the stay on top hint)
         self._visibility_timer = QTimer(self)
         self._visibility_timer.setInterval(1000)
-        self._visibility_timer.timeout.connect(self.ensure_window_visible)
+        self._visibility_timer.timeout.connect(self._ensure_window_visible)
         self._visibility_timer.start()
 
     # Set cursor as default texture regardless of where it is hovering on the main window
@@ -144,7 +144,7 @@ class MainWindow(QWidget):
             child.setAttribute(Qt.WidgetAttribute.WA_SetCursor, False)
             child.unsetCursor()
 
-    def ensure_window_visible(self) -> None:
+    def _ensure_window_visible(self) -> None:
         """Raise the main window if it is no longer the topmost window."""
         try:
             if not self._is_topmost_window():
@@ -191,7 +191,7 @@ class MainWindow(QWidget):
             self.show()
             self.raise_()  # Bring to front
 
-    def _send_message(self, message: str) -> None:
+    def send_message(self, message: str) -> None:
         """Send a user message with any pending screenshot attachments.
 
         Args:

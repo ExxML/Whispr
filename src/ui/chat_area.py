@@ -12,14 +12,14 @@ class ChatArea(QScrollArea):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.initUI()
+        self._initUI()
         self._init_scroll_animation()
         base_dir = os.getcwd()
         self.chat_history_path = os.path.join(base_dir, "src", "data", "chat_history.json")
         self._streaming_bubble = None
         self._streaming_text = ""
         
-    def initUI(self) -> None:
+    def _initUI(self) -> None:
         """Initialize the chat area UI layout, scroll settings, and styling."""
         # Configure scroll area
         self.setWidgetResizable(True)
@@ -86,8 +86,8 @@ class ChatArea(QScrollArea):
         self.chat_layout.addStretch()
         
         # Save the message to chat history
-        self.save_message(message, is_user)
-        
+        self._save_message(message, is_user)
+
         # Force scroll to bottom after a delay
         if is_user:
             QTimer.singleShot(400, lambda: self._animate_to(self.verticalScrollBar().maximum() - 10, 100))
@@ -119,12 +119,12 @@ class ChatArea(QScrollArea):
         if self._streaming_bubble is None:
             return
         # Save final message
-        self.save_message(self._streaming_text, is_user=False)
+        self._save_message(self._streaming_text, is_user=False)
         # Clear streaming state
         self._streaming_bubble = None
         self._streaming_text = ""
         
-    def save_message(self, message: str, is_user: bool) -> None:
+    def _save_message(self, message: str, is_user: bool) -> None:
         """Save a message to chat_history.json.
 
         Args:

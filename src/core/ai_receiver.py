@@ -22,9 +22,9 @@ class AIReceiver(QObject):
         self._attachments: list[str] | None = None
 
         # Connect signals to response handlers once
-        self.progress.connect(self.on_response_chunk)
-        self.finished.connect(self.on_response_ready)
-        self.error.connect(self.on_response_error)
+        self.progress.connect(self._on_response_chunk)
+        self.finished.connect(self._on_response_ready)
+        self.error.connect(self._on_response_error)
 
     def handle_message(self, message: str, attachments: list[str] | None = None) -> None:
         """Handle a user message by displaying it and starting AI generation.
@@ -50,14 +50,14 @@ class AIReceiver(QObject):
         self.chat_area.add_message(message, is_user=True)
 
         # Start new thread
-        self._thread = threading.Thread(target=self.run, daemon=True)
+        self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
 
     def stop(self) -> None:
         """Signal the thread to stop."""
         self._stop_flag.set()
 
-    def is_stopped(self) -> bool:
+    def _is_stopped(self) -> bool:
         """Check if stop has been requested.
 
         Returns:
@@ -65,19 +65,19 @@ class AIReceiver(QObject):
         """
         return self._stop_flag.is_set()
 
-    def run(self) -> None:
+    def _run(self) -> None:
         """Execute AI content generation and emit progress and completion signals."""
         try:
             response = self.ai_sender.generate_content_stream(
                 self._message, self._attachments, self._on_chunk,
             )
             # Only emit finished if we weren't stopped
-            if not self.is_stopped():
+            if not self._is_stopped():
                 self.finished.emit(response)
 
         except Exception as e:
             # Only emit error if we weren't stopped
-            if not self.is_stopped():
+            if not self._is_stopped():
                 self.error.emit(str(e))
 
     def _on_chunk(self, text: str) -> None:
@@ -87,15 +87,15 @@ class AIReceiver(QObject):
             text (str): The text chunk received from the AI stream.
         """
         # Emit chunk text to UI thread only if not stopped
-        if text and not self.is_stopped():
+        if text and not self._is_stopped():
             self.progress.emit(text)
 
-    def on_response_ready(self) -> None:
+    def _on_response_ready(self) -> None:
         """Handle successful AI response."""
         # Finalize streaming bubble
         self.chat_area.finalize_assistant_stream()
 
-    def on_response_error(self, error: str) -> None:
+    def _on_response_error(self, error: str) -> None:
         """Handle AI response error.
 
         Args:
@@ -107,7 +107,7 @@ class AIReceiver(QObject):
             self.chat_area.finalize_assistant_stream()
         self.chat_area.add_message(error_msg, is_user=False)
 
-    def on_response_chunk(self, chunk: str) -> None:
+    def _on_response_chunk(self, chunk: str) -> None:
         """Stream chunk text into the current assistant bubble.
 
         Args:

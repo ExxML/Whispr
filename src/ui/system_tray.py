@@ -20,7 +20,7 @@ class SystemTray(QSystemTrayIcon):
 
         # Quit action
         quit_action = QAction("Quit", self)
-        quit_action.triggered.connect(self.quit_app)
+        quit_action.triggered.connect(self._quit_app)
         
         # Add actions to menu
         self.menu = QMenu()
@@ -30,11 +30,11 @@ class SystemTray(QSystemTrayIcon):
         self.setContextMenu(self.menu)
         
         # Connect the activated signal (click) to toggle the window
-        self.activated.connect(self.on_tray_activated)
+        self.activated.connect(self._on_tray_activated)
 
         self.show()
     
-    def on_tray_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
+    def _on_tray_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
         """Handle system tray icon activation events.
 
         Args:
@@ -44,6 +44,6 @@ class SystemTray(QSystemTrayIcon):
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             self.main_window.toggle_window_visibility()
     
-    def quit_app(self) -> None:
+    def _quit_app(self) -> None:
         """Quit the application via the main window."""
         self.main_window.quit_app()

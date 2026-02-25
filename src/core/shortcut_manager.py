@@ -61,7 +61,7 @@ class ShortcutManager(QObject):
         self.clear_chat_signal.connect(self.main_window.chat_area.clear_chat)
         self.minimize_signal.connect(self.main_window.hide)
         self.toggle_signal.connect(self.main_window.toggle_window_visibility)
-        self.send_message_signal.connect(self.main_window._send_message)
+        self.send_message_signal.connect(self.main_window.send_message)
 
         # Initialize animation
         self.animation_timer = QTimer()
@@ -70,7 +70,7 @@ class ShortcutManager(QObject):
         self.animation_start_pos = None
         self.animation_target_pos = None
         self.animation_progress = 0.0
-        self.setup_movement_distances()
+        self._setup_movement_distances()
 
         # Hotkey lookup tables: (modifier_bitmask, vk_code) -> (callback, repeat_callbacks)
         self._always_active_hotkeys: dict[tuple[int, int], tuple[callable, bool]] = {}
@@ -100,22 +100,22 @@ class ShortcutManager(QObject):
             Ctrl + Shift + Q - Quit the application
         """
         self._always_active_hotkeys = {
-            (MOD_CTRL, ord("E")): (self.toggle_window_visibility, False),
-            (MOD_CTRL | MOD_SHIFT, ord("Q")): (self.close_app, False),
+            (MOD_CTRL, ord("E")): (self._toggle_window_visibility, False),
+            (MOD_CTRL | MOD_SHIFT, ord("Q")): (self._close_app, False),
         }
 
         self._main_window_hotkeys = {
-            (MOD_CTRL | MOD_ALT, VK_LEFT): (self.move_window_left, True),
-            (MOD_CTRL | MOD_ALT, VK_RIGHT): (self.move_window_right, True),
-            (MOD_CTRL | MOD_ALT, VK_UP): (self.move_window_up, True),
-            (MOD_CTRL | MOD_ALT, VK_DOWN): (self.move_window_down, True),
-            (MOD_CTRL | MOD_SHIFT, VK_UP): (self.scroll_up, True),
-            (MOD_CTRL | MOD_SHIFT, VK_DOWN): (self.scroll_down, True),
-            (MOD_CTRL | MOD_SHIFT, ord("S")): (self.screenshot, False),
-            (MOD_CTRL, ord("Q")): (self.minimize, False),
-            (MOD_CTRL, ord("N")): (self.clear_chat, False),
-            (MOD_CTRL, ord("D")): (self.generate_with_screenshot, False),
-            (MOD_CTRL, ord("G")): (self.generate_with_screenshot_fix, False),
+            (MOD_CTRL | MOD_ALT, VK_LEFT): (self._move_window_left, True),
+            (MOD_CTRL | MOD_ALT, VK_RIGHT): (self._move_window_right, True),
+            (MOD_CTRL | MOD_ALT, VK_UP): (self._move_window_up, True),
+            (MOD_CTRL | MOD_ALT, VK_DOWN): (self._move_window_down, True),
+            (MOD_CTRL | MOD_SHIFT, VK_UP): (self._scroll_up, True),
+            (MOD_CTRL | MOD_SHIFT, VK_DOWN): (self._scroll_down, True),
+            (MOD_CTRL | MOD_SHIFT, ord("S")): (self._screenshot, False),
+            (MOD_CTRL, ord("Q")): (self._minimize, False),
+            (MOD_CTRL, ord("N")): (self._clear_chat, False),
+            (MOD_CTRL, ord("D")): (self._generate_with_screenshot, False),
+            (MOD_CTRL, ord("G")): (self._generate_with_screenshot_fix, False),
         }
 
     # Win32 Keyboard Hook Logic
@@ -206,7 +206,7 @@ class ShortcutManager(QObject):
         thread = threading.Thread(target=self._hook_thread_entry, daemon=True)
         thread.start()
 
-    def stop_hook(self) -> None:
+    def _stop_hook(self) -> None:
         """Stop the keyboard hook and its message loop"""
         if self._hook_thread_id is not None:
             user32.PostThreadMessageW(self._hook_thread_id, WM_QUIT, 0, 0)
@@ -214,11 +214,11 @@ class ShortcutManager(QObject):
 
     # Hotkey Callback Functions
 
-    def toggle_window_visibility(self) -> None:
+    def _toggle_window_visibility(self) -> None:
         """Toggle main window visibility"""
         self.toggle_signal.emit()
 
-    def setup_movement_distances(self) -> None:
+    def _setup_movement_distances(self) -> None:
         """Determine screen geometry and movement distances"""
         self.screen_rect = QApplication.primaryScreen().availableGeometry()
         self.max_move_distance_x = self.screen_rect.width() // 14
@@ -257,14 +257,14 @@ class ShortcutManager(QObject):
             current_y = int(self.animation_start_pos.y() + (self.animation_target_pos.y() - self.animation_start_pos.y()) * ease_progress)
             self.main_window.move(current_x, current_y)
 
-    def move_window_left(self) -> None:
+    def _move_window_left(self) -> None:
         """Move main window left"""
         if self.animation_active and self.animation_progress < 0.5:
             return
         new_x = max(self.screen_bounds_offset, self.main_window.geometry().x() - self.max_move_distance_x)
         self.move_signal.emit(new_x, self.main_window.geometry().y())
 
-    def move_window_right(self) -> None:
+    def _move_window_right(self) -> None:
         """Move main window right"""
         if self.animation_active and self.animation_progress < 0.5:
             return
@@ -272,14 +272,14 @@ class ShortcutManager(QObject):
         new_x = min(max_x, self.main_window.geometry().x() + self.max_move_distance_x)
         self.move_signal.emit(new_x, self.main_window.geometry().y())
 
-    def move_window_up(self) -> None:
+    def _move_window_up(self) -> None:
         """Move main window up"""
         if self.animation_active and self.animation_progress < 0.5:
             return
         new_y = max(self.screen_bounds_offset, self.main_window.geometry().y() - self.max_move_distance_y)
         self.move_signal.emit(self.main_window.geometry().x(), new_y)
 
-    def move_window_down(self) -> None:
+    def _move_window_down(self) -> None:
         """Move main window down"""
         if self.animation_active and self.animation_progress < 0.5:
             return
@@ -287,31 +287,31 @@ class ShortcutManager(QObject):
         new_y = min(max_y, self.main_window.geometry().y() + self.max_move_distance_y)
         self.move_signal.emit(self.main_window.geometry().x(), new_y)
 
-    def scroll_up(self) -> None:
+    def _scroll_up(self) -> None:
         """Scroll up in the chat area"""
         self.scroll_signal.emit(-100)
 
-    def scroll_down(self) -> None:
+    def _scroll_down(self) -> None:
         """Scroll down in the chat area"""
         self.scroll_signal.emit(100)
 
-    def close_app(self) -> None:
+    def _close_app(self) -> None:
         """Close the application"""
         self.quit_signal.emit()  # Must emit signal to run on main thread
 
-    def screenshot(self) -> None:
+    def _screenshot(self) -> None:
         """Take a screenshot of the primary screen"""
         self.screenshot_signal.emit()
 
-    def minimize(self) -> None:
+    def _minimize(self) -> None:
         """Minimize the main window"""
         self.minimize_signal.emit()
 
-    def clear_chat(self) -> None:
+    def _clear_chat(self) -> None:
         """Clear the chat history"""
         self.clear_chat_signal.emit()
 
-    def generate_with_screenshot(self) -> None:
+    def _generate_with_screenshot(self) -> None:
         """Take a screenshot then automatically generate content."""
         self.screenshot_manager.take_screenshot()
         self.send_message_signal.emit(
@@ -325,7 +325,7 @@ class ShortcutManager(QObject):
 7. Give me the time and space complexity for the solution."""
         )
 
-    def generate_with_screenshot_fix(self) -> None:
+    def _generate_with_screenshot_fix(self) -> None:
         """Take a screenshot then automatically generate content to fix or improve code."""
         self.screenshot_manager.take_screenshot()
         self.send_message_signal.emit(

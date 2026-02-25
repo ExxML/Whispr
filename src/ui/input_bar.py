@@ -11,9 +11,9 @@ class InputBar(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.initUI()
+        self._initUI()
     
-    def initUI(self) -> None:
+    def _initUI(self) -> None:
         """Initialize the input bar UI layout and text field."""
         layout = QHBoxLayout(self)
         layout.setContentsMargins(12, 6, 12, 12)
@@ -22,7 +22,7 @@ class InputBar(QWidget):
         # Create text input field
         self.input_field = QLineEdit()
         self.input_field.setPlaceholderText("How can I help you?")
-        self.input_field.returnPressed.connect(self.send_message)
+        self.input_field.returnPressed.connect(self._send_message)
         
         # Set font
         font = QFont("Microsoft JhengHei", 10)
@@ -46,7 +46,7 @@ class InputBar(QWidget):
         # Add widgets to layout
         layout.addWidget(self.input_field)
     
-    def send_message(self) -> None:
+    def _send_message(self) -> None:
         """Send the message and clear the input field"""
         message = self.input_field.text().strip()
         if message:
@@ -54,7 +54,7 @@ class InputBar(QWidget):
             self.input_field.clear()
             self.input_field.setFocus()
     
-    def set_enabled(self, enabled: bool) -> None:
+    def _set_enabled(self, enabled: bool) -> None:
         """Enable or disable the input bar.
 
         Args:
