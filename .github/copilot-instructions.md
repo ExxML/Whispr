@@ -133,7 +133,7 @@ Unused variables and parameters (in functions that are overriden, for example) s
 
 ### Whitespace and Formatting
 - **Indentation:** 4 spaces.
-- **Blank lines:** 2 blank lines before top-level class/function definitions. 1 blank line between methods within a class. 1 blank line between logical blocks inside methods.
+- **Blank lines:** 2 blank lines before top-level class/function definitions. 1 blank line between methods within a class while respecting the surrounding indentation. 1 blank line between logical blocks inside methods while respecting the surrounding indentation.
 - **Line length:** No strict limit, but keep lines reasonable (~120 characters). Long expressions may span multiple lines.
 - **Multi-line expressions:** Opening paren at end of line, closing paren on its own line aligned with the statement. Operators at end of line:
 ```python
