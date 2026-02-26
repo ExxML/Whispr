@@ -1,6 +1,3 @@
-import json
-import os
-
 from PyQt6.QtCore import QAbstractAnimation, QEasingCurve, QPropertyAnimation, Qt, QTimer
 from PyQt6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
 
@@ -8,14 +5,12 @@ from .chat_bubble import ChatBubble
 
 
 class ChatArea(QScrollArea):
-    """Scrollable chat area for displaying message history"""
+    """Scrollable chat area for displaying message history."""
     
     def __init__(self, parent=None):
         super().__init__(parent)
         self._initUI()
         self._init_scroll_animation()
-        base_dir = os.getcwd()
-        self.chat_history_path = os.path.join(base_dir, "src", "data", "chat_history.json")
         self.streaming_bubble = None
         self.streaming_text = ""
         
@@ -85,9 +80,6 @@ class ChatArea(QScrollArea):
         # Add stretch back at the end
         self.chat_layout.addStretch()
         
-        # Save the message to chat history
-        self._save_message(message, is_user)
-
         # Force scroll to bottom after a delay
         if is_user:
             QTimer.singleShot(400, lambda: self._animate_to(self.verticalScrollBar().maximum(), 100))
@@ -115,47 +107,19 @@ class ChatArea(QScrollArea):
         self.streaming_bubble.set_bot_message(self.streaming_text)
     
     def finalize_assistant_stream(self) -> None:
-        """Persist the streamed assistant message and clear streaming state."""
+        """Finalize the streamed assistant message and clear streaming state."""
         if self.streaming_bubble is None:
             return
-        # Save final message
-        self._save_message(self.streaming_text, is_user=False)
-        # Clear streaming state
         self.streaming_bubble = None
         self.streaming_text = ""
-        
-    def _save_message(self, message: str, is_user: bool) -> None:
-        """Save a message to chat_history.json.
-
-        Args:
-            message (str): The message text to save.
-            is_user (bool): Whether the message is from the user.
-        """
-        try:
-            with open(self.chat_history_path, "r") as f:
-                history = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            history = []
-
-        history.append({
-            "message": message,
-            "is_user": is_user
-        })
-
-        with open(self.chat_history_path, "w") as f:
-            json.dump(history, f, indent=2)
     
     def clear_chat(self) -> None:
-        """Clear all messages from the chat area"""
+        """Clear all messages from the chat area."""
         # Remove all widgets except the stretch
         while self.chat_layout.count() > 1:
             item = self.chat_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
-        
-        # Clear chat history (JSON file)
-        with open(self.chat_history_path, "w") as f:
-            json.dump([], f)
     
     def shortcut_scroll(self, amount: int) -> None:
         """Scroll the chat area by a specified amount.

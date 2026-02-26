@@ -6,26 +6,46 @@ from typing import Callable
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from google.genai.chats import Chat
+
+
+MODEL = "gemini-2.5-flash"
+CONFIG = types.GenerateContentConfig(
+    thinking_config=types.ThinkingConfig(thinking_budget=0)  # Disable thinking mode for faster responses
+)
 
 
 class AISender():
-    """Handles sending user input to Gemini."""
+    """Handles sending user input to Gemini via a persistent chat session."""
 
     def __init__(self):
         # Load environment variables from the .env file
         base_dir = Path(__file__).resolve().parent.parent.parent
         load_dotenv(base_dir / ".env")
 
-        # Initialize Gemini client
+        # Initialize Gemini client and start a chat session
         self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        self.chat = self._create_chat()
 
-    def generate_content_stream(
+    def _create_chat(self) -> Chat:
+        """Create a new Gemini chat session.
+
+        Returns:
+            Chat: A new chat session instance.
+        """
+        return self.client.chats.create(model=MODEL, config=CONFIG)
+
+    def reset_chat(self) -> None:
+        """Reset the chat session, clearing all conversation history."""
+        self.chat = self._create_chat()
+
+    def send_message(
         self,
         user_input: str,
         attachments: list[str] | None = None,
         on_chunk: Callable[[str], None] | None = None
     ) -> str:
-        """Generate and stream AI content with attachments, if any.
+        """Send a message and stream the response from the Gemini model.
 
         Args:
             user_input (str): The user's input text to send to the model.
@@ -35,25 +55,18 @@ class AISender():
         Returns:
             str: The full generated response text.
         """
-        # Build content parts from attachments
-        contents: list[types.Part | str] = []
+        # Build message parts from attachments
+        message: list[types.Part | str] = []
         for filepath in attachments or []:
             mime_type = mimetypes.guess_type(filepath)[0] or "application/octet-stream"
             with open(filepath, "rb") as f:
-                contents.append(
+                message.append(
                     types.Part.from_bytes(data=f.read(), mime_type=mime_type)
                 )
-        contents.append(user_input)
+        message.append(user_input)
 
         full_response = ""
-        # Stream generation
-        for chunk in self.client.models.generate_content_stream(
-            model="gemini-2.5-flash",
-            contents=contents,
-            config=types.GenerateContentConfig(
-                thinking_config=types.ThinkingConfig(thinking_budget=0)  # Disables thinking
-            ),
-        ):
+        for chunk in self.chat.send_message_stream(message):
             if chunk.text:
                 full_response += chunk.text
                 print(chunk.text, end="", flush=True)

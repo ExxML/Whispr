@@ -17,6 +17,7 @@ class MainWindow(QWidget):
     def __init__(self, ai_sender, screenshot_manager):
         super().__init__()
         self._initUI()
+        self.ai_sender = ai_sender
         self.screenshot_manager = screenshot_manager
         self.worker = AIReceiver(ai_sender, self.chat_area)
         
@@ -59,7 +60,11 @@ class MainWindow(QWidget):
         # Create and add title bar buttons
         self.clear_chat_button = ClearChatButton(
             self,
-            lambda: (self.chat_area.clear_chat(), self.screenshot_manager.clear_screenshots()),
+            lambda: (
+                self.chat_area.clear_chat(),
+                self.ai_sender.reset_chat(),
+                self.screenshot_manager.clear_screenshots(),
+            ),
             self.chat_area,
         )
         header_layout = QHBoxLayout()
@@ -207,6 +212,7 @@ class MainWindow(QWidget):
             self.worker.stop()
 
         self.chat_area.clear_chat()
+        self.ai_sender.reset_chat()
         self.screenshot_manager.clear_screenshots()
         app = QApplication.instance()
         if app is not None:

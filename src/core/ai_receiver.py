@@ -68,9 +68,7 @@ class AIReceiver(QObject):
     def _run(self) -> None:
         """Execute AI content generation and emit progress and completion signals."""
         try:
-            response = self.ai_sender.generate_content_stream(
-                self.message, self.attachments, self._on_chunk,
-            )
+            response = self.ai_sender.send_message(self.message, self.attachments, self._on_chunk)
             # Only emit finished if we weren't stopped
             if not self._is_stopped():
                 self.finished.emit(response)

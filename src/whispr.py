@@ -1,5 +1,3 @@
-import json
-import os
 import sys
 
 from PyQt6.QtWidgets import QApplication
@@ -19,9 +17,5 @@ if __name__ == "__main__":
     main_window = MainWindow(ai_sender, screenshot_manager)
     shortcut_manager = ShortcutManager(main_window, screenshot_manager)
     tray_icon = SystemTray(main_window, shortcut_manager)
-    
-    # Clear chat history and screenshots on program start
-    main_window.chat_area.clear_chat()
-    screenshot_manager.clear_screenshots()
 
     sys.exit(app.exec())
