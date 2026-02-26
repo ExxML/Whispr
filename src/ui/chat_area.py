@@ -11,8 +11,7 @@ class ChatArea(QScrollArea):
         super().__init__(parent)
         self._initUI()
         self._init_scroll_animation()
-        self.streaming_bubble = None
-        self.streaming_text = ""
+        self._reset_stream()
         
     def _initUI(self) -> None:
         """Initialize the chat area UI layout, scroll settings, and styling."""
@@ -58,6 +57,11 @@ class ChatArea(QScrollArea):
             }
         """)
     
+    def _reset_stream(self) -> None:
+        """Reset the streaming bubble and accumulated text to a blank state."""
+        self.streaming_bubble = None
+        self.streaming_text = ""
+
     def _init_scroll_animation(self) -> None:
         """Initialize smooth scrolling animation"""
         self.scroll_animation = QPropertyAnimation(self.verticalScrollBar(), b"value", self)
@@ -120,8 +124,7 @@ class ChatArea(QScrollArea):
         if self.streaming_bubble is None:
             return
         self.streaming_bubble.stop_loading_animation()
-        self.streaming_bubble = None
-        self.streaming_text = ""
+        self._reset_stream()
 
     def show_stream_error(self, error_msg: str) -> None:
         """Display an error message in the current streaming bubble, replacing the loading indicator.
@@ -136,8 +139,7 @@ class ChatArea(QScrollArea):
             return
         self.streaming_bubble.stop_loading_animation()
         self.streaming_bubble.set_bot_message(error_msg)
-        self.streaming_bubble = None
-        self.streaming_text = ""
+        self._reset_stream()
     
     def clear_chat(self) -> None:
         """Clear all messages from the chat area."""
