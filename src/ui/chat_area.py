@@ -77,6 +77,13 @@ class ChatArea(QScrollArea):
         bubble = ChatBubble(message, is_user)
         self.chat_layout.addWidget(bubble)
         
+        # Pre-create the assistant loading bubble so it is visible when the chat scrolls down
+        if is_user:
+            self.streaming_bubble = ChatBubble("", is_user=False)
+            self.streaming_text = ""
+            self.chat_layout.addWidget(self.streaming_bubble)
+            self.streaming_bubble.start_loading_animation()
+
         # Add stretch back at the end
         self.chat_layout.addStretch()
         
@@ -103,6 +110,8 @@ class ChatArea(QScrollArea):
         """
         if self.streaming_bubble is None:
             return
+        if not self.streaming_text:
+            self.streaming_bubble.stop_loading_animation()
         self.streaming_text += chunk_text
         self.streaming_bubble.set_bot_message(self.streaming_text)
     
@@ -110,6 +119,23 @@ class ChatArea(QScrollArea):
         """Finalize the streamed assistant message and clear streaming state."""
         if self.streaming_bubble is None:
             return
+        self.streaming_bubble.stop_loading_animation()
+        self.streaming_bubble = None
+        self.streaming_text = ""
+
+    def show_stream_error(self, error_msg: str) -> None:
+        """Display an error message in the current streaming bubble, replacing the loading indicator.
+
+        If no streaming bubble exists, falls back to adding a new bot message.
+
+        Args:
+            error_msg (str): The error text to display.
+        """
+        if self.streaming_bubble is None:
+            self.add_message(error_msg, is_user=False)
+            return
+        self.streaming_bubble.stop_loading_animation()
+        self.streaming_bubble.set_bot_message(error_msg)
         self.streaming_bubble = None
         self.streaming_text = ""
     

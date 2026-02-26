@@ -100,10 +100,7 @@ class AIReceiver(QObject):
             error (str): The error message from the AI response.
         """
         error_msg = f"Error generating response: {error}"
-        # Finalize any in-progress stream, then add error as a separate message
-        if self.chat_area.streaming_bubble is not None:
-            self.chat_area.finalize_assistant_stream()
-        self.chat_area.add_message(error_msg, is_user=False)
+        self.chat_area.show_stream_error(error_msg)
 
     def _on_response_chunk(self, chunk: str) -> None:
         """Stream chunk text into the current assistant bubble.

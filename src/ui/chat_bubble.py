@@ -1,4 +1,6 @@
-from PyQt6.QtCore import Qt
+import math
+
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
@@ -78,3 +80,47 @@ class ChatBubble(QWidget):
         """
         self.message = message
         self.message_label.setText(format_message(message))
+
+    def start_loading_animation(self) -> None:
+        """Start the animated three-dot loading indicator."""
+        self._loading_frame = 0
+        self._loading_timer = QTimer(self)
+        self._loading_timer.timeout.connect(self._tick_loading)
+        self._loading_timer.start(80)
+        self._tick_loading()
+
+    def _tick_loading(self) -> None:
+        """Advance the loading animation by one frame."""
+        t = self._loading_frame * (2 * math.pi / 20)  # 20 frames per cycle (~1.6 s)
+
+        def dot_opacity(phase_offset: float) -> float:
+            """Compute a smooth opacity value using a sine wave with a phase offset.
+
+            Args:
+                phase_offset (float): The phase offset in radians for this dot.
+
+            Returns:
+                float: Opacity in the range [0.1, 0.95].
+            """
+            return 0.1 + 0.85 * (math.sin(t + phase_offset) + 1) / 2
+
+        o1 = dot_opacity(0)
+        o2 = dot_opacity(2 * math.pi / 3)
+        o3 = dot_opacity(4 * math.pi / 3)
+
+        html = (
+            f'<span style="color: rgba(255, 255, 255, {o1:.2f}); font-size: 16px;">&#9679;</span>'
+            f'&nbsp;'
+            f'<span style="color: rgba(255, 255, 255, {o2:.2f}); font-size: 16px;">&#9679;</span>'
+            f'&nbsp;'
+            f'<span style="color: rgba(255, 255, 255, {o3:.2f}); font-size: 16px;">&#9679;</span>'
+        )
+        self.message_label.setText(html)
+        self._loading_frame = (self._loading_frame + 1) % 20
+
+    def stop_loading_animation(self) -> None:
+        """Stop the loading animation and clean up the timer."""
+        if hasattr(self, "_loading_timer") and self._loading_timer is not None:
+            self._loading_timer.stop()
+            self._loading_timer.deleteLater()
+            self._loading_timer = None
