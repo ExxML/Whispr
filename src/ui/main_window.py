@@ -86,6 +86,7 @@ class MainWindow(QWidget):
                 background-color: rgba(255, 255, 255, 0.5);
                 color: rgba(0, 0, 0, 0.6);
                 border-radius: 0px;
+                margin-top: 1px;
             }
         """)
         self.close_btn = QPushButton("×", self)
@@ -104,7 +105,9 @@ class MainWindow(QWidget):
                 background-color: rgba(255, 77, 69, 0.5);
                 color: rgba(0, 0, 0, 0.6);
                 border-radius: 0px;
-                border-top-right-radius: 8px;
+                border-top-right-radius: 7px;
+                margin-top: 1px;
+                margin-right: 1px;
             }
         """)
         header_layout.addWidget(self.min_btn)
@@ -234,7 +237,7 @@ class MainWindow(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         rect = self.rect()
-        radius = 10
+        radius = 8
         
         # Draw window with rounded corners
         r, g, b, a = (20, 20, 20, 0.6)

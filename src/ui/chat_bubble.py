@@ -38,8 +38,8 @@ class ChatBubble(QWidget):
                     color: rgba(255, 255, 255, 1.0);
                     background-color: transparent;
                     border: 1px solid rgba(255, 255, 255, 1.0);
-                    border-radius: 10px;
-                    padding: 7px 7px 0px 7px;  /* top, right, bottom, left */
+                    border-radius: 8px;
+                    padding: 5px 5px -2px 5px;  /* top, right, bottom, left */
                 }
             """)
 
@@ -47,7 +47,7 @@ class ChatBubble(QWidget):
             fm = QFontMetrics(font)
             text_width = fm.horizontalAdvance(self.message) + 8 # additional offset for right spacing
             max_width = 400
-            total_text_width = text_width + 14 # accounting for 7px left + 7px right padding
+            total_text_width = text_width + 10  # accounting for 5px left + 5px right padding
             # Set max width if text length exceeds max width
             if total_text_width > max_width:
                 if total_text_width > max_width + 5:

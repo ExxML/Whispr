@@ -27,7 +27,9 @@ class ClearChatButton(QPushButton):
             QPushButton:hover {
                 background-color: rgba(255, 77, 69, 0.5);
                 border-radius: 0px;
-                border-top-left-radius: 8px;
+                border-top-left-radius: 7px;
+                margin-top: 1px;
+                margin-left: 1px;
             }
         """)
 
