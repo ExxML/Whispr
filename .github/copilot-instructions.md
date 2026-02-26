@@ -111,16 +111,17 @@ def process(a: int, b: int) -> None:
 | Category | Convention | Examples |
 |---|---|---|
 | Classes | `PascalCase` | `MainWindow`, `ChatBubble`, `AIReceiver` |
-| Functions / methods | `snake_case` | `take_screenshot`, `handle_message` |
-| Variables | `snake_case` | `full_response`, `chat_history_path` |
-| Constants | `UPPER_SNAKE_CASE` | `WH_KEYBOARD_LL`, `MOD_CTRL`, `VK_SHIFT` |
+| Public Functions / methods | `snake_case` | `take_screenshot`, `handle_message` |
 | Private methods | Single underscore prefix | `_initUI`, `_on_response_chunk` |
+| Public Variables | `snake_case` | `full_response`, `chat_history_path` |
+| Private variables | No prefix | `streaming_bubble`, `visibility_timer` | 
+| Constants | `UPPER_SNAKE_CASE` | `WH_KEYBOARD_LL`, `MOD_CTRL`, `VK_SHIFT` |
 | Qt signals | `snake_case`, no underscore | `message_sent`, `move_signal`, `finished` |
 | Event handler methods | `on_` prefix | `on_response_ready`, `on_tray_activated` |
 
 Acronyms stay uppercase in class names: `AISender`, `AIReceiver`. No double-underscore (name-mangling) prefixes.
 
-Unused variables and parameters should be prefixed with an underscore to indicate intentional non-use (e.g. `_unused_param`).
+Unused variables and parameters (in functions that are overriden, for example) should be prefixed with an underscore to indicate intentional non-use (e.g. `_unused_param`).
 
 ### String Formatting
 - Use **f-strings** for all string interpolation. Never use `.format()` or `%`-style formatting.
