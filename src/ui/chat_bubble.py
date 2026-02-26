@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QFontMetrics
+from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 from ui.ai_formatter import format_message
@@ -39,24 +39,19 @@ class ChatBubble(QWidget):
                     background-color: transparent;
                     border: 1px solid rgba(255, 255, 255, 1.0);
                     border-radius: 8px;
-                    padding: 5px 5px -2px 5px;  /* top, right, bottom, left */
+                    padding: 5px 4px -3px 5px;  /* top, right, bottom, left */
                 }
-            """)
+            """)  # padding adjusted to visually center text within the bubble
 
-            # Calculate text width to determine if wrapping is needed
-            fm = QFontMetrics(font)
-            text_width = fm.horizontalAdvance(self.message) + 8 # additional offset for right spacing
+            # Let Qt estimate the natural width of the message, then word wrap if necessary
+            natural_width = self.message_label.sizeHint().width()
             max_width = 400
-            total_text_width = text_width + 10  # accounting for 5px left + 5px right padding
-            # Set max width if text length exceeds max width
-            if total_text_width > max_width:
-                if total_text_width > max_width + 5:
-                    # Only enable word wrap if text is long enough (prevents excessive top/bottom padding when text length is just above max width)
-                    self.message_label.setWordWrap(True)
+
+            if natural_width > max_width:
                 self.message_label.setFixedWidth(max_width)
+                self.message_label.setWordWrap(True)
             else:
-                # If text is one line
-                self.message_label.setFixedWidth(total_text_width)
+                self.message_label.setFixedWidth(natural_width)
 
             layout.addStretch()
             layout.addWidget(self.message_label)
