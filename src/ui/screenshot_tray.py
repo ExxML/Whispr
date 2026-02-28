@@ -78,7 +78,7 @@ class ScreenshotTray(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 0, 20, 0)  # Extra right margin to avoid the scroll bar
+        layout.setContentsMargins(12, 0, 12, 0)  # Extra right margin to avoid the scroll bar
         layout.setSpacing(6)
         layout.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 

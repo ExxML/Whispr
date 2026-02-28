@@ -21,7 +21,7 @@ class InputBar(QWidget):
 
         # Input row
         input_row = QHBoxLayout()
-        input_row.setContentsMargins(12, 6, 12, 12)
+        input_row.setContentsMargins(12, 12, 12, 12)
         input_row.setSpacing(8)
 
         # Create text input field

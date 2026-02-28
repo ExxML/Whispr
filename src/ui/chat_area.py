@@ -37,13 +37,12 @@ class ChatArea(QScrollArea):
                 border: none;
             }
             QScrollBar:vertical {
-                background-color: rgba(255, 255, 255, 0.1);
-                width: 8px;
-                border-radius: 4px;
+                background-color: rgba(0, 0, 0, 0);
+                width: 5px;
             }
             QScrollBar::handle:vertical {
                 background-color: rgba(255, 255, 255, 0.3);
-                border-radius: 4px;
+                border-radius: 2px;
                 min-height: 20px;
             }
             QScrollBar::handle:vertical:hover {

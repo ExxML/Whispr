@@ -159,7 +159,7 @@ class MainWindow(QWidget):
         tray_h = tray.height()
         tray.setGeometry(
             0,
-            self.input_bar.y() - tray_h - 2,
+            self.input_bar.y() - tray_h,
             self.width(),
             tray_h,
         )
