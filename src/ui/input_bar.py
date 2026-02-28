@@ -1,34 +1,39 @@
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QHBoxLayout, QLineEdit, QWidget
+from PyQt6.QtWidgets import QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
 
 
 class InputBar(QWidget):
-    """Input bar with text field and send button"""
-    
+    """Input bar with a text field."""
+
     # Signal emitted when a message is sent
     message_sent = pyqtSignal(str)
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._initUI()
-    
+
     def _initUI(self) -> None:
         """Initialize the input bar UI layout and text field."""
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 6, 12, 12)
-        layout.setSpacing(8)
-        
+        outer_layout = QVBoxLayout(self)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
+        outer_layout.setSpacing(0)
+
+        # Input row
+        input_row = QHBoxLayout()
+        input_row.setContentsMargins(12, 6, 12, 12)
+        input_row.setSpacing(8)
+
         # Create text input field
         self.input_field = QLineEdit()
         self.input_field.setPlaceholderText("How can I help you?")
         self.input_field.returnPressed.connect(self._send_message)
-        
+
         # Set font
         font = QFont("Microsoft JhengHei", 10)
         self.input_field.setFont(font)
         self.input_field.setMinimumHeight(32)
-        
+
         # Style the input field
         self.input_field.setStyleSheet("""
             QLineEdit {
@@ -42,18 +47,18 @@ class InputBar(QWidget):
                 border: 1px solid rgba(255, 255, 255, 0.8);
             }
         """)
-        
-        # Add widgets to layout
-        layout.addWidget(self.input_field)
-    
+
+        input_row.addWidget(self.input_field)
+        outer_layout.addLayout(input_row)
+
     def _send_message(self) -> None:
-        """Send the message and clear the input field"""
+        """Send the current message and clear the input field."""
         message = self.input_field.text().strip()
         if message:
             self.message_sent.emit(message)
             self.input_field.clear()
             self.input_field.setFocus()
-    
+
     def _set_enabled(self, enabled: bool) -> None:
         """Enable or disable the input bar.
 

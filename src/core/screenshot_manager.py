@@ -2,12 +2,16 @@ import glob
 import os
 
 import mss
+from PyQt6.QtCore import QObject, pyqtSignal
 
 
-class ScreenshotManager():
+class ScreenshotManager(QObject):
     """Handles capturing screenshots of the primary screen."""
 
+    screenshot_added = pyqtSignal(str)
+
     def __init__(self):
+        super().__init__()
         base_dir = os.getcwd()
         self.screenshots_dir = os.path.join(base_dir, "src", "data", "cache", "screenshots")
         os.makedirs(self.screenshots_dir, exist_ok=True)  # Ensure the folder exists
@@ -33,6 +37,7 @@ class ScreenshotManager():
 
             self.screenshot_count += 1
             self.pending_paths.append(filepath)
+            self.screenshot_added.emit(filepath)
             return filepath
 
         except Exception as e:
@@ -48,6 +53,15 @@ class ScreenshotManager():
         paths = self.pending_paths.copy()
         self.pending_paths.clear()
         return paths
+
+    def remove_pending(self, path: str) -> None:
+        """Remove a specific screenshot from the pending list.
+
+        Args:
+            path (str): The file path of the screenshot to remove.
+        """
+        if path in self.pending_paths:
+            self.pending_paths.remove(path)
 
     def clear_screenshots(self) -> None:
         """Delete all screenshots from the screenshots directory and reset the counter."""

@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import QApplication, QHBoxLayout, QPushButton, QVBoxLayout,
 from .chat_area import ChatArea
 from .clear_chat_button import ClearChatButton
 from .input_bar import InputBar
+from .screenshot_tray import ScreenshotTray
 from core.ai_receiver import AIReceiver
 
 
@@ -16,9 +17,9 @@ class MainWindow(QWidget):
 
     def __init__(self, ai_sender, screenshot_manager):
         super().__init__()
-        self._initUI()
         self.ai_sender = ai_sender
         self.screenshot_manager = screenshot_manager
+        self._initUI()
         self.worker = AIReceiver(ai_sender, self.chat_area)
         
     def _initUI(self) -> None:
@@ -57,6 +58,9 @@ class MainWindow(QWidget):
         # Create input bar
         self.input_bar = InputBar(self)
 
+        # Create screenshot tray as a floating overlay (not in any layout)
+        self.screenshot_tray = ScreenshotTray(self.screenshot_manager, self)
+
         # Create and add title bar buttons
         self.clear_chat_button = ClearChatButton(
             self,
@@ -64,6 +68,7 @@ class MainWindow(QWidget):
                 self.chat_area.clear_chat(),
                 self.ai_sender.reset_chat(),
                 self.screenshot_manager.clear_screenshots(),
+                self.screenshot_tray.clear(),
             ),
             self.chat_area,
         )
@@ -121,6 +126,10 @@ class MainWindow(QWidget):
         self.input_bar.message_sent.connect(self.send_message)
         main_layout.addWidget(self.input_bar)
 
+        # Position the floating screenshot tray above the input bar
+        self.screenshot_tray.raise_()
+        self.screenshot_tray.visibility_changed.connect(self._position_screenshot_tray)
+
         # Unset cursor for all child widgets to preserve system cursor
         self._unset_cursor_recursive(self)
         
@@ -138,6 +147,22 @@ class MainWindow(QWidget):
         self.visibility_timer.setInterval(1000)
         self.visibility_timer.timeout.connect(self._ensure_window_visible)
         self.visibility_timer.start()
+
+    def resizeEvent(self, event) -> None:
+        """Reposition the floating screenshot tray when the window is resized."""
+        super().resizeEvent(event)
+        self._position_screenshot_tray()
+
+    def _position_screenshot_tray(self) -> None:
+        """Place the screenshot tray above the input bar, floating over the chat area."""
+        tray = self.screenshot_tray
+        tray_h = tray.height()
+        tray.setGeometry(
+            0,
+            self.input_bar.y() - tray_h - 2,
+            self.width(),
+            tray_h,
+        )
 
     # Set cursor as default texture regardless of where it is hovering on the main window
     def _unset_cursor_recursive(self, widget: QWidget) -> None:
@@ -206,6 +231,7 @@ class MainWindow(QWidget):
             message (str): The user's message text.
         """
         attachments = self.screenshot_manager.get_and_clear_pending()
+        self.screenshot_tray.clear()
         self.worker.handle_message(message, attachments or None)
 
     def quit_app(self) -> None:
