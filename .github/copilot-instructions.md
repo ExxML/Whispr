@@ -109,14 +109,14 @@ Example:
 def process(a: int, b: int) -> None:
 ```
 
-When passing in an object as a parameter, the parameter name should be the class name in lower_snake_case and there should be a string type hint of the class name of the object (ex. "MainWindow", not MainWindow). You should use the most general type that covers the operations needed. Do not over-specify unless subclass-specific functionality of the parameter is required (ex. accessing a parameter object's methods/variables).
+When passing in an object as a parameter, the parameter name should be the class name in lower_snake_case and the type hint should be the class of the object. You should use the most general type that covers the operations needed. Do not over-specify unless subclass-specific functionality of the parameter is required (ex. accessing a parameter object's methods/variables).
 
 Example:
 ```python
-def __init__(self, main_window: "QWidget", bg_color: "QColor") -> None:  # main_window is only used for super.__init__ and therefore does not need to be typed as "MainWindow"
+def __init__(self, main_window: QWidget, bg_color: QColor) -> None:  # main_window is only used for super.__init__ and therefore does not need to be typed as MainWindow
 ```
 ```python
-def __init__(self, chat_area: "ChatArea", is_top: bool) -> None:  # chat_area.bg_color is accessed later in the method, which falls under subclass-specific functionality, and therefore chat_area should be typed as "ChatArea", not "QWidget"
+def __init__(self, chat_area: ChatArea, is_top: bool) -> None:  # chat_area.bg_color is accessed later in the method, which falls under subclass-specific functionality, and therefore chat_area should be typed as ChatArea, not QWidget
 ```
 
 ### Naming Conventions
