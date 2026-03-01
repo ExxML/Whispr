@@ -12,7 +12,7 @@ class AIReceiver(QObject):
     error = pyqtSignal(str)
     progress = pyqtSignal(str)
 
-    def __init__(self, ai_sender, chat_area):
+    def __init__(self, ai_sender, chat_area) -> None:
         super().__init__()
         self.ai_sender = ai_sender
         self.chat_area = chat_area
