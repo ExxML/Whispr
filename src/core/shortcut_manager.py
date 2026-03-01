@@ -48,7 +48,7 @@ class ShortcutManager(QObject):
     toggle_signal = pyqtSignal()
     send_message_signal = pyqtSignal(str)
 
-    def __init__(self, main_window, screenshot_manager):
+    def __init__(self, main_window, screenshot_manager) -> None:
         super().__init__()
         self.main_window = main_window
         self.screenshot_manager = screenshot_manager

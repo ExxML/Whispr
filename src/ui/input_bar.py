@@ -9,8 +9,8 @@ class InputBar(QWidget):
     # Signal emitted when a message is sent
     message_sent = pyqtSignal(str)
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, main_window) -> None:
+        super().__init__(main_window)
         self._initUI()
 
     def _initUI(self) -> None:

@@ -7,13 +7,13 @@ from PyQt6.QtWidgets import QMenu, QSystemTrayIcon
 class SystemTray(QSystemTrayIcon):
     """System tray icon for toggling the main window and quitting the app."""
 
-    def __init__(self, main_window, shortcut_manager=None, parent=None):
+    def __init__(self, main_window, shortcut_manager) -> None:
         # Set icon
         base_dir = os.getcwd()
         icon_path = os.path.join(base_dir, "src", "assets", "blank.ico")
         icon = QIcon(icon_path)
-        
-        super().__init__(icon, parent)
+
+        super().__init__(icon)
         self.setToolTip("whispr")
         self.main_window = main_window
         self.shortcut_manager = shortcut_manager

@@ -10,7 +10,7 @@ class ScreenshotManager(QObject):
 
     screenshot_added = pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         base_dir = os.getcwd()
         self.screenshots_dir = os.path.join(base_dir, "src", "data", "cache", "screenshots")

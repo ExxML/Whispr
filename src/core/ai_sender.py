@@ -18,7 +18,7 @@ CONFIG = types.GenerateContentConfig(
 class AISender():
     """Handles sending user input to Gemini via a persistent chat session."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Load environment variables from the .env file
         base_dir = Path(__file__).resolve().parent.parent.parent
         load_dotenv(base_dir / ".env")

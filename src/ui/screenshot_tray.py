@@ -14,8 +14,8 @@ class ScreenshotThumbnail(QWidget):
 
     removed = pyqtSignal(str)
 
-    def __init__(self, path: str, parent: QWidget | None = None):
-        super().__init__(parent)
+    def __init__(self, path: str, screenshot_tray) -> None:
+        super().__init__(screenshot_tray)
         self.path = path
         # Extra BTN_OVERHANG pixels on top and right let the X button protrude outside the image
         self.setFixedSize(PREVIEW_WIDTH + BTN_OVERHANG, PREVIEW_HEIGHT + BTN_OVERHANG)
@@ -70,8 +70,8 @@ class ScreenshotTray(QWidget):
 
     visibility_changed = pyqtSignal()
 
-    def __init__(self, screenshot_manager, parent: QWidget | None = None):
-        super().__init__(parent)
+    def __init__(self, screenshot_manager, main_window) -> None:
+        super().__init__(main_window)
         self.screenshot_manager = screenshot_manager
 
         # Transparent background so the chat text behind the tray remains readable

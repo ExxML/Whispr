@@ -7,8 +7,8 @@ from .chat_bubble import ChatBubble
 class ChatArea(QScrollArea):
     """Scrollable chat area for displaying message history."""
     
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, main_window) -> None:
+        super().__init__(main_window)
         self._initUI()
         self._init_scroll_animation()
         self._reset_stream()

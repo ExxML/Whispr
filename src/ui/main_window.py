@@ -15,7 +15,9 @@ from core.ai_receiver import AIReceiver
 class MainWindow(QWidget):
     """Main application window containing the chat area, input bar, and title bar buttons."""
 
-    def __init__(self, ai_sender, screenshot_manager):
+    BG_COLOR = QColor(20, 20, 20, 153)
+
+    def __init__(self, ai_sender, screenshot_manager) -> None:
         super().__init__()
         self.ai_sender = ai_sender
         self.screenshot_manager = screenshot_manager
@@ -266,9 +268,7 @@ class MainWindow(QWidget):
         radius = 8
         
         # Draw window with rounded corners
-        r, g, b, a = (20, 20, 20, 0.6)
-        color = QColor(r, g, b, int(255 * a))
-        painter.setBrush(color)
+        painter.setBrush(self.BG_COLOR)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.drawRoundedRect(rect, radius, radius)
         
