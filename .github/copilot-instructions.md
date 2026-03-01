@@ -99,11 +99,18 @@ class ShortcutManager(QObject):
 ```
 
 ### Type Hints
-Always add type hints, return types, and function annotations to all functions and methods (except __init__). Use `-> None` for functions that do not return a value. If the type of a parameter or return value is unclear, use `Any` from the `typing` module. If there are multiple possible types, use `|` to indicate a union (e.g. `str | None`). For callbacks, use `Callable` from `typing` with the appropriate signature (e.g. `Callable[[str], None]` for a function that takes a string and returns nothing).
+Always add type hints, return types, and function annotations to all functions and methods. Use `-> None` for functions that do not return a value. If the type of a parameter or return value is unclear, use `Any` from the `typing` module. If there are multiple possible types, use `|` to indicate a union (e.g. `str | None`). For callbacks, use `Callable` from `typing` with the appropriate signature (e.g. `Callable[[str], None]` for a function that takes a string and returns nothing).
 
 Example:
 ```python
 def process(a: int, b: int) -> None:
+```
+
+When passing in an object as a parameter, the parameter name should be the class name in lower_snake_case and there should be no type hint.
+
+Example:
+```python
+def __init__(self, chat_area, is_top: bool) -> None:
 ```
 
 ### Naming Conventions
@@ -111,13 +118,14 @@ def process(a: int, b: int) -> None:
 | Category | Convention | Examples |
 |---|---|---|
 | Classes | `PascalCase` | `MainWindow`, `ChatBubble`, `AIReceiver` |
-| Public Functions / methods | `snake_case` | `take_screenshot`, `handle_message` |
-| Private methods | Single underscore prefix | `_initUI`, `_on_response_chunk` |
+| Public Functions / Methods | `snake_case` | `take_screenshot`, `handle_message` |
+| Private Functions / Methods | Single underscore prefix | `_initUI`, `_on_response_chunk` |
 | Public Variables | `snake_case` | `full_response`, `chat_history_path` |
-| Private variables | No prefix | `streaming_bubble`, `visibility_timer` | 
-| Constants | `UPPER_SNAKE_CASE` | `WH_KEYBOARD_LL`, `MOD_CTRL`, `VK_SHIFT` |
-| Qt signals | `snake_case`, no underscore | `message_sent`, `move_signal`, `finished` |
-| Event handler methods | `on_` prefix | `on_response_ready`, `on_tray_activated` |
+| Private Variables | No prefix | `streaming_bubble`, `visibility_timer` | 
+| Public Constants | `UPPER_SNAKE_CASE` | `WH_KEYBOARD_LL`, `MOD_CTRL` |
+| Private Constants | No prefix | `BG_COLOR`, `VK_SHIFT` |
+| Qt Signals | `snake_case`, no underscore | `message_sent`, `move_signal`, `finished` |
+| Event Handler Methods | `on_` prefix | `on_response_ready`, `on_tray_activated` |
 
 Acronyms stay uppercase in class names: `AISender`, `AIReceiver`. No double-underscore (name-mangling) prefixes.
 
