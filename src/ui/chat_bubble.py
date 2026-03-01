@@ -63,10 +63,11 @@ class ChatBubble(QWidget):
                 QLabel {
                     color: rgba(255, 255, 255, 1.0);
                     background-color: transparent;
+                    padding: 0px 0px 0px 1px;  /* top, right, bottom, left */
                 }
             """)
             self.message_label.setWordWrap(True)
-            self.message_label.setFixedWidth(500)
+            self.message_label.setFixedWidth(515)
             layout.addWidget(self.message_label)
             layout.addStretch()
         
